@@ -7,7 +7,7 @@
 *.pyc
 .DS_Store
 __pycache__
-rebyval.egg-info
+tki.egg-info
 data/
 build/
 dist/

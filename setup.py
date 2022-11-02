@@ -16,7 +16,7 @@ for pack in install_dependencies:
     os.system(cmd)
 
 setup(
-    name="rebyval",
+    name="tki",
     version="0.1",
     packages=find_packages(),
     author="Enzhi Zhang && Ruqin Wang",
@@ -25,7 +25,7 @@ setup(
     license="MIT",
     entry_points={
         'console_scripts':
-            ['recmd = rebyval.tools.recmd.recmd:parse_args']
+            ['recmd = tki.tools.recmd.recmd:parse_args']
     },
     url="",
 )
