@@ -1,6 +1,4 @@
 from tqdm import trange
-
-import wandb
 import numpy as np
 import tensorflow as tf
 import horovod.tensorflow as hvd
