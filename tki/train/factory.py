@@ -24,8 +24,8 @@ class SupervisorFactory():
     def __init__(self) -> None:
         self.supervisor_list = {'cifar10': Cifar10RLSupervisor}
     
-    def __call__(self, supervisor_args, id = 0):
-        return self.get_supervisor(supervisor_args=supervisor_args, student_target='', id=id)
+    def __call__(self, supervisor_args, student_target='', id = 0):
+        return self.get_supervisor(supervisor_args=supervisor_args, student_target=student_target, id=id)
 
     def get_supervisor(self, supervisor_args = None, student_target='', id = id):
         supervisor_cls = self.supervisor_list.get(student_target['name'])
