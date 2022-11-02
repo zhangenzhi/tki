@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: tki-cifar10-ep300-da #for each exp
+    name: tki-cifar10-ep300-da-de #for each exp
     devices: 4
     multi-p: 3
     dist: False
@@ -33,7 +33,7 @@ experiment:
       learning_rate: 0.1 
     train_loop:
         train:
-          lr_decay: False # decay
+          lr_decay: True # decay
           action: fix
           policy: e_greedy
         valid:
