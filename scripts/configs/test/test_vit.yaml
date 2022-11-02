@@ -19,8 +19,6 @@ experiment:
       name: cifar10 # default cifar10
       batch_size: 128
       epochs: 400
-      da: True
-      # task: rl
     model:
       name: t-resnet56 # default dnn
       classes: 10

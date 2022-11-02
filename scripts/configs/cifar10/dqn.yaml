@@ -20,7 +20,6 @@ experiment:
       batch_size: 512
       epochs: 100
       da: True # data augumentation
-      task: RL
     model:
       name: dnn 
       units: [128,64,32,10] 

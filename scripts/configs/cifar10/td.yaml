@@ -18,7 +18,6 @@ experiment:
       batch_size: 512
       epochs: 100
       da: True
-      task: RL
     model:
       name: dnn # default dnn
       units: [128,64,32,10] # default 128,64,64,32
