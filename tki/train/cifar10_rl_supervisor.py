@@ -1,4 +1,4 @@
-import wandb
+
 import tensorflow as tf
 from tqdm import trange
 
@@ -91,18 +91,11 @@ class Cifar10RLSupervisor(Supervisor):
         
         # parse train loop control args
         train_loop_args = self.args['train_loop']
-        train_args = train_loop_args['train']
-        valid_args = train_loop_args['valid']
-        test_args = train_loop_args['test']
 
         # dataset train, valid, test
         train_iter = iter(self.train_dataset)
         valid_iter = iter(self.valid_dataset)
         test_iter = iter(self.test_dataset)
-        
-        # metrics reset
-        metric_name = self.args['metrics']['name']
-        self.metrics[metric_name].reset_states()
 
         # train, valid, test
         # tqdm update, logger
@@ -135,7 +128,7 @@ class Cifar10RLSupervisor(Supervisor):
                 with self.logger.as_default():
                     tf.summary.scalar("epoch_train_loss", et_loss, step=self.dataloader.info['epochs']*self.id+epoch)
                     tf.summary.scalar("epoch_valid_loss", ev_loss, step=self.dataloader.info['epochs']*self.id+epoch)
-                    # self.wb.log({"epoch_train_loss":et_loss})
+                    
         
         with trange(self.dataloader.info['test_step'], desc="Test steps") as t:
             for test_step in t:
@@ -143,5 +136,5 @@ class Cifar10RLSupervisor(Supervisor):
                 inputs,labels = self.preprocess_weightspace(data)
                 t_loss = self._test_step(inputs, labels)
                 t.set_postfix(se_loss=t_loss.numpy())
-        # self.model.summary()
-        # wandb.tensorflow.log(tf.summary.merge_all())
+                
+        self.model_save(name="latest")

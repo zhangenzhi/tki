@@ -1,6 +1,7 @@
 import os
 import sys
 import pdb
+import tensorflow as tf
 from tki.tools.utils import print_warning
 
 def prepare_dirs(valid_args):
@@ -50,3 +51,35 @@ class ForkedPdb(pdb.Pdb):
             pdb.Pdb.interaction(self, *args, **kwargs)
         finally:
             sys.stdin = _stdin
+            
+            
+#----- actions -----
+def elem_action(supervisor, model, action_sample, id, t_grad, gloabl_train_step, num_act=1000):
+        # fixed action with pseudo sgd
+        flat_grads = [tf.reshape(tf.math.reduce_sum(g, axis= -1), shape=(-1)) for g in t_grad]
+        flat_vars = [tf.reshape(tf.math.reduce_sum(v, axis= -1), shape=(-1)) for v in model.trainable_variables] 
+        flat_grad = tf.reshape(tf.concat(flat_grads, axis=0), (1,-1))
+        flat_var = tf.reshape(tf.concat(flat_vars, axis=0), (1,-1))
+
+        if id % 10 == 0:
+            action_sample = []
+            for g in t_grad:
+                shape = g.shape
+                action_sample.append( tf.random.uniform(minval=1.0, maxval=1.0, shape=[num_act]+list(shape)))
+        else:
+            action_sample = []
+            for g in t_grad:
+                shape = g.shape
+                action_sample.append( tf.random.uniform(minval=0.1, maxval=5.0, shape=[num_act]+list(shape)))
+
+        scaled_grads = [g*a for g, a in zip(t_grad, action_sample)]
+        flat_scaled_gards = [tf.reshape(tf.math.reduce_sum(g, axis= -1), shape=(num_act, -1)) for g in scaled_grads]
+        flat_scaled_gards = tf.concat(flat_scaled_gards, axis=1)
+        
+        var_copy = tf.tile(flat_var, [flat_scaled_gards.shape.as_list()[0], 1])
+
+        # select wights with best Q-value
+        steps = tf.reshape(tf.constant([gloabl_train_step/1000]*num_act, dtype=tf.float32),shape=(-1,1))
+        states_actions = {'state':var_copy, 'action':flat_scaled_gards,'step':steps}
+        values = supervisor(states_actions)
+        return action_sample, values

@@ -1,10 +1,9 @@
 from tqdm import trange
 import numpy as np
 import tensorflow as tf
-import horovod.tensorflow as hvd
 
 # others
-import time
+from tki.plot.visualization import visualization
 from tki.train.student import Student
 from tki.tools.utils import print_warning, print_green, print_error, print_normal
 
@@ -125,18 +124,6 @@ class Cifar10RLStudent(Student):
     
     def fix_action(self, t_grad):
         action_samples = tf.reshape(tf.constant(self.action_sample, dtype=tf.float32),shape=(-1,1))
-        # fixed action with pseudo sgd
-        
-        # flat_grad = tf.concat([tf.reshape(g,(1,-1)) for g in t_grad], axis=-1)
-        # flat_var = tf.concat([tf.reshape(w,(1,-1)) for w in self.model.trainable_variables], axis=-1)
-        
-        # scaled_gards = [grad * action_samples for grad in t_grad]
-        # var_copy = tf.reshape(tf.tile(flat_var, [scaled_gards.shape.as_list()[0], 1]), scaled_gards.shape)
-        # scaled_vars = var_copy - scaled_gards * self.optimizer.learning_rate
-        # scaled_vars = tf.reshape(scaled_vars,shape=(action_samples.shape.as_list()[0],1,-1))
-        # # select wights with best Q-value
-        # steps = tf.reshape(tf.constant([self.gloabl_train_step/10000]*action_samples.shape[0], dtype=tf.float32),shape=(-1,1))
-        # states_actions = {'state':tf.squeeze(scaled_vars), 'action':scaled_gards,'step':steps}
         
         state =  self.model.trainable_variables
         next_states = []
@@ -184,7 +171,7 @@ class Cifar10RLStudent(Student):
             
         return t_loss, self.E_Q, act, t_grad, self.values
     
-    def train(self, new_student=None, supervisor_info=None):
+    def train(self, supervisor_info=None):
         
         # parse train loop control args
         train_loop_args = self.args['train_loop']
@@ -198,12 +185,11 @@ class Cifar10RLStudent(Student):
         valid_iter = iter(self.valid_dataset)
         test_iter = iter(self.test_dataset)
         
-        if supervisor_info != None:
-            self.supervisor = self._build_supervisor_from_vars(supervisor_info)
+        # load supervisor
+        self.supervisor = self._load_supervisor_model(supervisor_info)
         
         total_epochs = self.dataloader.info['epochs']
-        if self.dist:
-            total_epochs = int(total_epochs/hvd.size())
+
 
         # train, valid, write to tfrecords, test
         # tqdm update, logger
@@ -252,16 +238,21 @@ class Cifar10RLStudent(Student):
                     ett_loss = self.mtt_loss_fn.result()
                     ett_metric = tf.reduce_mean(tt_metrics)
                 e.set_postfix(et_loss=et_loss.numpy(), ett_metric=ett_metric.numpy(), ett_loss=ett_loss.numpy())
-                # wandb log
+             
                 with self.logger.as_default():
                     tf.summary.scalar("et_loss", et_loss, step=epoch)
                     tf.summary.scalar("ev_loss", ev_metric, step=epoch)
                     tf.summary.scalar("ett_mloss", ett_loss, step=epoch)
-                    tf.summary.scalar("ett_metric", ett_metric, step=epoch)
-                # self.wb.log({"ett_metric":ett_metric, "et_loss":et_loss, "ev_metric":ev_metric, "ett_mloss":ett_loss})     
+                    tf.summary.scalar("ett_metric", ett_metric, step=epoch)    
                 
         self.save_experience(q_mode=self.valid_args["q_mode"])
-        # self.wb.finish()
+        self.model.summary()
+        self.model_save(name="finished")
+        if train_loop_args["visual"]:
+            visualization(self.model, 
+                          train_iter.get_next(), test_iter.get_next(), 
+                          step_size=1e-2, scale=100, 
+                          save_to=self.logdir)
         
     def save_experience(self, q_mode="static", df=0.9):
         
@@ -299,7 +290,6 @@ class Cifar10RLStudent(Student):
                     
         elif q_mode == 'static':
             s = len(self.experience_buffer['rewards'])
-            # Q = [self.experience_buffer['rewards'][-1]] 
             Q = [tf.constant(10.0,shape=self.experience_buffer['rewards'][-1].shape)] 
             for i in reversed(range(s-1)):
                 q_value = self.experience_buffer['rewards'][i] + df*Q[0]
@@ -382,7 +372,7 @@ class Cifar10RLStudent(Student):
             E_Q = 10.0 * ev_metric if E_Q < 0.0 else E_Q
         elif self.valid_args["q_mode"] == "static":
             E_Q = E_Q
-        # self.wb.log({"E_Q":E_Q, "action":action, "values":values})  # wandb log
+
         with self.logger.as_default():
             tf.summary.scalar("E_Q", E_Q, step=self.gloabl_train_step)
             tf.summary.scalar("action", action, step=self.gloabl_train_step)

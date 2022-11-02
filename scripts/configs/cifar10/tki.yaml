@@ -1,17 +1,17 @@
 experiment:
   context:
-    name: cifar10-da #for each exp
+    name: tki-cifar10 #for each exp
     devices: 4
-    multi-p: False
+    multi-p: 3
     dist: False
     log_path: ./log
 
   main_loop:
     warmup: 
-      student_nums: 10
-      supervisor_trains: 1
-    nums: 100
-    student_nums: 1
+      student_nums: 20
+      supervisor_iters: 1
+    nums: 50
+    student_nums: 3
 
   student:
     name: gpu4-ep100
@@ -19,7 +19,7 @@ experiment:
       name: cifar10 # cifar100, mnist
       batch_size: 512
       epochs: 100
-      da: True # data augumentation
+      da: False # data augumentation
     model:
       name: dnn 
       units: [128,64,32,10] 
@@ -37,11 +37,13 @@ experiment:
           action: fix
           policy: e_greedy
         valid:
-          q_mode: TD
-          weight_space: norm_reduce
+          q_mode: static
+          weight_space: sum_reduce
           valid_gap: 10
+          itki: False
         test:
           epoch: -1
+        visual: False
 
   supervisor:
     dataloader:
@@ -61,5 +63,5 @@ experiment:
     loss:
       name: MeanSquaredError #MeanAbsoluteError 
     train_loop:
-        valid:
-          valid_gap: 10000 
+        train:
+          weight_space: sum_reduce
