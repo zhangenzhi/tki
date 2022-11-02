@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: tki-cifar10-ep300 #for each exp
+    name: tki-cifar10-ep300-da #for each exp
     devices: 4
     multi-p: 3
     dist: False
@@ -19,7 +19,7 @@ experiment:
       name: cifar10 # cifar100, mnist
       batch_size: 512
       epochs: 300
-      da: False # data augumentation
+      da: True # data augumentation
     model:
       name: dnn 
       units: [128,64,32,10] 
