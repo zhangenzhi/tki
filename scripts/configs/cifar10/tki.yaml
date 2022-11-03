@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: tki-cifar10-ep300-da-de #for each exp
+    name: tki-cifar10-ep300-da-nr #for each exp
     devices: 4
     multi-p: 3
     dist: False
@@ -38,7 +38,7 @@ experiment:
           policy: e_greedy
         valid:
           q_mode: static
-          weight_space: sum_reduce
+          weight_space: norm_reduce
           valid_gap: 10
           itki: False
         test:
