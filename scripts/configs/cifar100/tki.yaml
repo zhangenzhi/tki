@@ -22,6 +22,7 @@ experiment:
       da: False # data augumentation
     model:
       name: resnet56 
+      classes: 100
     loss:
       name: CategoricalCrossentropy
     metrics: 
