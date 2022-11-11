@@ -8,7 +8,7 @@ experiment:
   main_loop:
     warmup: 
       student_nums: 20
-      supervisor_trains: 5
+      supervisor_iters: 5
     nums: 200
     student_nums: 5
 
