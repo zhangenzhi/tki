@@ -18,8 +18,8 @@ experiment:
     dataloader:
       name: cifar100 # cifar100, mnist
       batch_size: 128
-      epochs: 10
-      da: False # data augumentation
+      epochs: 300
+      da: True # data augumentation
     model:
       name: resnet56 
       classes: 100
@@ -32,13 +32,13 @@ experiment:
       learning_rate: 0.1 
     train_loop:
         train:
-          lr_decay: False # decay
+          lr_decay: True # decay
           action: fix_n
           policy: e_greedy
         valid:
           q_mode: TD-NQ
           weight_space: norm_reduce
-          valid_gap: 100
+          valid_gap: 1000
           itki: False
         test:
           epoch: -1
