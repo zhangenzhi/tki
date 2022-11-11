@@ -397,30 +397,6 @@ class Student(object):
             examples.append(tf.train.Example(features=tf.train.Features(feature=feature)))
 
         return examples, configs
-
-    def _write_trace_to_tfrecord(self, weights, valid_loss, weight_space=None):
-
-        weight_loss = {'vars': weights, 'valid_loss': valid_loss}
-
-        if weight_space['format'] == 'tensor':
-            example, configs = self.tensor_example(weight_loss)
-        elif weight_space['format'] == 'sum_reduce':
-            example, configs = self.sum_reduce_example(weight_loss)
-        else:
-            example, configs = self.tensor_example(weight_loss)
-
-        weight_dir = os.path.join(self.args['log_path'], 'weight_space')
-        config_path = os.path.join(weight_dir, 'feature_configs.yaml')
-
-        configs['num_of_students'] = len(glob_tfrecords(
-            weight_dir, glob_pattern='*.tfrecords'))
-        configs['sample_per_student'] = int(
-            self.dataloader.info['train_step'] / self.args['train_loop']['valid']['valid_gap'] + 1) * self.dataloader.info['epochs']
-        configs['total_samples'] = configs['sample_per_student'] * \
-            configs['num_of_students']
-        save_yaml_contents(contents=configs, file_path=config_path)
-
-        self.writter.write(example.SerializeToString())
         
     def _write_trail_to_tfrecord(self, experience_buffer):
         

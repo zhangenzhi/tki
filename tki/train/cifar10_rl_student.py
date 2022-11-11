@@ -49,72 +49,6 @@ class Cifar10RLStudent(Student):
         elif self.valid_args['weight_space'] == 'no_reduce':
             flat_state = tf.concat([tf.reshape(g,(1,-1)) for g in state], axis=-1)
         return flat_state
-        
-    def elem_action(self, t_grad, num_act=1000):
-        # fixed action with pseudo sgd
-        flat_grads = [tf.reshape(tf.math.reduce_sum(g, axis= -1), shape=(-1)) for g in t_grad]
-        flat_vars = [tf.reshape(tf.math.reduce_sum(v, axis= -1), shape=(-1)) for v in self.model.trainable_variables] 
-        flat_grad = tf.reshape(tf.concat(flat_grads, axis=0), (1,-1))
-        flat_var = tf.reshape(tf.concat(flat_vars, axis=0), (1,-1))
-
-        if self.id % 10 == 0:
-            self.action_sample = []
-            for g in t_grad:
-                shape = g.shape
-                self.action_sample.append( tf.random.uniform(minval=1.0, maxval=1.0, shape=[num_act]+list(shape)))
-        else:
-            self.action_sample = []
-            for g in t_grad:
-                shape = g.shape
-                self.action_sample.append( tf.random.uniform(minval=0.1, maxval=5.0, shape=[num_act]+list(shape)))
-
-        scaled_grads = [g*a for g, a in zip(t_grad, self.action_sample)]
-        flat_scaled_gards = [tf.reshape(tf.math.reduce_sum(g, axis= -1), shape=(num_act, -1)) for g in scaled_grads]
-        flat_scaled_gards = tf.concat(flat_scaled_gards, axis=1)
-        
-        var_copy = tf.tile(flat_var, [flat_scaled_gards.shape.as_list()[0], 1])
-
-        # select wights with best Q-value
-        steps = tf.reshape(tf.constant([self.gloabl_train_step/1000]*num_act, dtype=tf.float32),shape=(-1,1))
-        states_actions = {'state':var_copy, 'action':flat_scaled_gards,'step':steps}
-        self.values = self.supervisor(states_actions)
-        return self.action_sample, self.values
-
-    def soft_action(self, t_grad, num_act=64):
-        # fixed action with pseudo sgd
-        flat_grads = [tf.reshape(tf.math.reduce_sum(g, axis= -1), shape=(-1)) for g in t_grad]
-        flat_vars = [tf.reshape(tf.math.reduce_sum(v, axis= -1), shape=(-1)) for v in self.model.trainable_variables] 
-        flat_grad = tf.reshape(tf.concat(flat_grads, axis=0), (1,-1))
-        flat_var = tf.reshape(tf.concat(flat_vars, axis=0), (1,-1))
-        if self.id % 10 == 0:
-            self.action_sample = tf.random.uniform(minval=1.0, maxval=1.0, shape=(num_act,1))
-        else:
-            self.action_sample = tf.random.uniform(minval=0.01, maxval=5.0, shape=(num_act,1))
-        scaled_gards = flat_grad * self.action_sample
-        var_copy = tf.reshape(tf.tile(flat_var, [scaled_gards.shape.as_list()[0], 1]), scaled_gards.shape)
-        # select wights with best Q-value
-        steps = tf.reshape(tf.constant([self.gloabl_train_step/10000]*self.action_sample.shape[0], dtype=tf.float32),shape=(-1,1))
-        states_actions = {'state':var_copy, 'action':scaled_gards,'step':steps}
-        self.values = self.supervisor(states_actions)
-        return self.action_sample, self.values
-    
-    def neg_action(self, t_grad):
-        # fixed action with pseudo sgd
-        flat_grads = [tf.reshape(tf.math.reduce_sum(g, axis= -1), shape=(-1)) for g in t_grad]
-        flat_vars = [tf.reshape(tf.math.reduce_sum(v, axis= -1), shape=(-1)) for v in self.model.trainable_variables] 
-        flat_grad = tf.reshape(tf.concat(flat_grads, axis=0), (1,-1))
-        flat_var = tf.reshape(tf.concat(flat_vars, axis=0), (1,-1))
-        if self.id % 10 == 0:
-            self.action_sample = tf.random.uniform(minval=1.0, maxval=1.0, shape=(10,1))
-        else:
-            self.action_sample = tf.reshape(tf.constant([0.01,0.1,1.0,1.5,2.0,-0.01,-0.1,-1.0,-1.5,-2.0], dtype=tf.float32),shape=(-1,1))
-        scaled_gards = flat_grad * self.action_sample
-        var_copy = tf.reshape(tf.tile(flat_var, [scaled_gards.shape.as_list()[0], 1]), scaled_gards.shape)
-        # select wights with best Q-value
-        steps = tf.reshape(tf.constant([self.gloabl_train_step/10000]*self.action_sample.shape[0], dtype=tf.float32),shape=(-1,1))
-        states_actions = {'state':var_copy, 'action':scaled_gards,'step':steps}
-        self.values = self.supervisor(states_actions)
-        return self.action_sample, self.values
     
     def fix_n_action(self):
         flat_var = self.reduced_space(self.model.trainable_variables)
@@ -153,7 +87,7 @@ class Cifar10RLStudent(Student):
         self.mt_loss_fn.update_state(t_loss)
                 
         # fixed action with pseudo sgd
-        if (self.gloabl_train_step %  (self.valid_gap*30) )==0:
+        if (self.gloabl_train_step %  self.valid_gap )==0:
             if self.train_args['action'] == 'fix':
                 _, self.values = self.fix_action(t_grad=t_grad)
             elif self.train_args['action'] == 'fix_n':
@@ -337,14 +271,11 @@ class Cifar10RLStudent(Student):
             for i in range(len(self.action_sample)):
                 grad = [t_g * self.action_sample[i] for t_g in t_grad]
                 self.optimizer.apply_gradients(zip(grad, self.model.trainable_variables))
-                self.mv_loss_fn.reset_states()
-                vv_metrics = []
-                for valid_step in range(self.dataloader.info['valid_step']):
-                    v_data = valid_iter.get_next()
-                    v_loss, v_metrics = self._valid_step(v_data['inputs'], v_data['labels'])
-                    vv_metrics.append(v_metrics)
-                ev_loss = self.mv_loss_fn.result()
-                ev_metric = tf.reduce_mean(vv_metrics)
+                
+                v_data = valid_iter.get_next()
+                v_loss, v_metrics = self._valid_step(v_data['inputs'], v_data['labels'])
+                ev_metric = tf.reduce_mean(v_metrics)
+                
                 raw_values.append(ev_metric)
                 re_grad = [-g for g in grad]
                 self.optimizer.apply_gradients(zip(re_grad, self.model.trainable_variables))
@@ -353,7 +284,6 @@ class Cifar10RLStudent(Student):
             fore_grad =  [action*g for g in t_grad]
             self.optimizer.apply_gradients(zip(fore_grad, self.model.trainable_variables))
             ev_metric = values[int(len(self.action_sample)/2)]
-            
         else:
             self.mv_loss_fn.reset_states()
             vv_metrics = []
@@ -368,7 +298,9 @@ class Cifar10RLStudent(Student):
         # save sample
         if self.valid_args["q_mode"] == "TD":
             E_Q = 10.0 * ev_metric if E_Q < 0.0 else E_Q
-        elif self.valid_args["q_mode"] == "TD_NQ":
+        elif self.valid_args["q_mode"] == "TD-NQ":
+            E_Q = ev_metric 
+        elif self.valid_args["q_mode"] == "NQ":
             E_Q = 10.0 * ev_metric if E_Q < 0.0 else E_Q
         elif self.valid_args["q_mode"] == "static":
             E_Q = E_Q

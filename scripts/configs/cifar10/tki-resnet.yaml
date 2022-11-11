@@ -1,0 +1,67 @@
+experiment:
+  context:
+    name: tki-nq-cifar10 #for each exp
+    devices: 4
+    multi-p: 1
+    dist: False
+    log_path: ./log
+
+  main_loop:
+    warmup: 
+      student_nums: 1
+      supervisor_iters: 1
+    nums: 1
+    student_nums: 1
+
+  student:
+    name: gpu4-ep300
+    dataloader:
+      name: resnet56 # cifar100, mnist
+      batch_size: 128
+      epochs: 10
+      da: False # data augumentation
+    model:
+      name: dnn 
+      units: [128,64,32,10] 
+      activations: [relu,relu,relu,softmax] 
+    loss:
+      name: CategoricalCrossentropy
+    metrics: 
+      name: categorical_accuracy
+    optimizer:
+      name: sgd 
+      learning_rate: 0.1 
+    train_loop:
+        train:
+          lr_decay: False # decay
+          action: fix_n
+          policy: e_greedy
+        valid:
+          q_mode: TD-NQ
+          weight_space: norm_reduce
+          valid_gap: 10
+          itki: False
+        test:
+          epoch: -1
+        visual: False
+
+  supervisor:
+    dataloader:
+      name: dnn_sr_RL
+      exp: decay
+      replay_window: 25
+      batch_size: 128
+      epochs: 100
+    model:
+      name: dnn # default dnn
+      units: [128,64,32,5] # default 128,64,64,32
+      embedding: True
+      activations: [relu,relu,relu,relu] # default relu
+    optimizer:
+      name: sgd
+      learning_rate: 0.01
+    loss:
+      name: MeanSquaredError #MeanAbsoluteError 
+    train_loop:
+        train:
+          weight_space: sum_reduce

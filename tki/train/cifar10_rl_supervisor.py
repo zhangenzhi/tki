@@ -28,12 +28,12 @@ class Cifar10RLSupervisor(Supervisor):
         
         return inputs, labels
         
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels):
         with tf.GradientTape() as tape:
             predictions = self.model(inputs, training=True)
             predictions = tf.squeeze(predictions)
-            labels = tf.reshape(labels,predictions.shape)
+            labels = tf.reshape(labels, predictions.shape)
             loss = self.loss_fn(labels, predictions)
 
         gradients = tape.gradient(loss, self.model.trainable_variables)
@@ -62,15 +62,13 @@ class Cifar10RLSupervisor(Supervisor):
                 zip(gradients, self.model.trainable_variables))
         print(loss)
         
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _valid_step(self, inputs, labels):
-        try:
-            predictions = self.model(inputs, training=False)
-            predictions = tf.squeeze(predictions)
-            labels = tf.reshape(labels,predictions.shape)
-            loss = self.loss_fn(labels, predictions)
-        except:
-            print_error("valid step error.")
+        
+        predictions = self.model(inputs, training=False)
+        predictions = tf.squeeze(predictions)
+        labels = tf.reshape(labels,predictions.shape)
+        loss = self.loss_fn(labels, predictions)
             
         return loss
 
