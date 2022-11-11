@@ -18,7 +18,7 @@ experiment:
     dataloader:
       name: cifar100 # cifar100, mnist
       batch_size: 128
-      epochs: 300
+      epochs: 200
       da: True # data augumentation
     model:
       name: resnet56 
@@ -38,7 +38,7 @@ experiment:
         valid:
           q_mode: TD-NQ
           weight_space: norm_reduce
-          valid_gap: 1000
+          valid_gap: 10000
           itki: False
         test:
           epoch: -1
