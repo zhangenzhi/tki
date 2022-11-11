@@ -1,7 +1,7 @@
 experiment:
   context:
     name: tki-nq-cifar100 #for each exp
-    devices: 4
+    devices: 1
     multi-p: 1
     dist: False
     log_path: ./log
