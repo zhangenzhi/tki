@@ -145,7 +145,6 @@ class Student(object):
             gradients = tape.gradient(loss, self.model.trainable_variables)
             self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
-
         self.mt_loss_fn.update_state(loss)
         
         return loss, gradients, train_metrics
