@@ -1,4 +1,4 @@
-import horovod.tensorflow as hvd
+
 
 import tensorflow as tf
 
@@ -23,14 +23,14 @@ class DistController(BaseController):
 
     def warmup(self, warmup):
         init_samples = warmup['student_nums']
-        supervisor_trains = warmup['supervisor_trains']
+        supervisor_iters = warmup['supervisor_iters']
         
         for i in range(init_samples):
             student = self._build_student()
             student.dist = True
             student.run()
         
-        for j in range(supervisor_trains):
+        for j in range(supervisor_iters):
             keep_train = False if j == 0 else True
             self.supervisor.run(keep_train=keep_train, new_students=[])
 

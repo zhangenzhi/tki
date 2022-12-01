@@ -5,9 +5,9 @@ from tqdm import trange
 from tki.train.supervisor import Supervisor
 from tki.tools.utils import print_error
 
-class Cifar10RLSupervisor(Supervisor):
+class Cifar100RLSupervisor(Supervisor):
     def __init__(self, supervisor_args, logger = None, id = 0):
-        super(Cifar10RLSupervisor, self).__init__(supervisor_args, logger = logger, id = id)
+        super(Cifar100RLSupervisor, self).__init__(supervisor_args, logger = logger, id = id)
         
     def __call__(self, inputs):
         s_loss = self.model(inputs, training=False)

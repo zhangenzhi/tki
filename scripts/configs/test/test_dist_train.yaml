@@ -12,7 +12,7 @@ experiment:
   main_loop:
     warmup: 
       student_nums: 1
-      supervisor_trains: 0
+      supervisor_iters: 0
     nums: 0
     student_nums: 0
 
@@ -23,7 +23,6 @@ experiment:
       batch_size: 128
       epochs: 12800
       da: True
-      # task: rl
     model:
       name: t-resnet56 # default dnn
       classes: 10

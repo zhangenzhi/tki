@@ -9,7 +9,7 @@ experiment:
   main_loop:
     warmup: 
       student_nums: 10
-      supervisor_trains: 1
+      supervisor_iters: 1
     nums: 100
     student_nums: 1
 
@@ -20,7 +20,6 @@ experiment:
       batch_size: 512
       epochs: 100
       da: True # data augumentation
-      task: RL
     model:
       name: dnn 
       units: [128,64,32,10] 

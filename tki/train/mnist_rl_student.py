@@ -7,10 +7,10 @@ from tki.plot.visualization import visualization
 from tki.train.student import Student
 from tki.tools.utils import print_warning, print_green, print_error, print_normal
 
-class Cifar10RLStudent(Student):
+class MnistRLStudent(Student):
     
     def __init__(self, student_args, supervisor = None, id = 0):
-        super(Cifar10RLStudent, self).__init__(student_args, supervisor,id)
+        super(MnistRLStudent, self).__init__(student_args, supervisor,id)
         
         self.act_idx = []
         self.gloabl_train_step = 0

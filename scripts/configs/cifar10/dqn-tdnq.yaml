@@ -8,7 +8,7 @@ experiment:
   main_loop:
     warmup: 
       student_nums: 20
-      supervisor_trains: 5
+      supervisor_iters: 5
     nums: 200
     student_nums: 5
 
@@ -18,7 +18,6 @@ experiment:
       batch_size: 512
       epochs: 100
       da: False
-      task: RL
     model:
       name: dnn # default dnn
       units: [128,64,32,10] # default 128,64,64,32
