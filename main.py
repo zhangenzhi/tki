@@ -1,6 +1,7 @@
 import os
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import argparse
+from easydict import EasyDict as edict
 
 from tki.tools.utils import get_yml_content
 from tki.controller.utils import check_args_from_input_config
@@ -24,10 +25,11 @@ def main():
     cmd_args = args_parser()
     yaml_configs = get_yml_content(cmd_args.config)
     yaml_configs = check_args_from_input_config(yaml_configs)
+    yaml_configs = edict(yaml_configs)
     
-    if yaml_configs['experiment']['context'].get('multi-p'):
+    if yaml_configs.experiment.context.get('multi-p'):
         ctr = MultiController(yaml_configs)
-    elif yaml_configs['experiment']['context'].get('dist'):
+    elif yaml_configs.experiment.context.get('dist'):
         ctr = DistController(yaml_configs)
     else:
         ctr = BaseController(yaml_configs)

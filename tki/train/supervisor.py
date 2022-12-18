@@ -1,127 +1,93 @@
 import os
-from datetime import datetime
-
+from tqdm import trange
 import tensorflow as tf
 
-from tki.dataloader.factory import dataset_factory
-from tki.dataloader.weights_loader import DNNWeightsLoader, DNNSumReduce
-from tki.optimizer.scheduler.linear_scaling_with_decay import LinearScalingWithDecaySchedule
-
-# model
-from tki.model.factory import model_factory
-
 # others
+from tki.train.modules.RL.action import weights_augmentation
 from tki.tools.utils import print_green, print_error, print_normal, check_mkdir
-from tki.dataloader.utils import glob_tfrecords
+from tki.train.trainer import Trainer
 
-class Supervisor(object):
-    def __init__(self, supervisor_args, logger = None, id = 0):
-        self.args = supervisor_args
-        self.logger = logger
-        self.id = id
-        self.logdir = self._create_logdir()
+class Supervisor(Trainer):
+    def __init__(self, supervisor_args, id = 0):
+        super(Supervisor, self).__init__(trainer_args=supervisor_args, id=id)
+        # build model
+        self.model = self._build_model()
+        self.name = "sp_" + supervisor_args.name
+        
+        self.args.dataloader.path = os.path.join(supervisor_args.log_path,"weight_space")
+        self.weights_style = supervisor_args.train_loop.train.weights_style
+
+    def weights_augmentation(self, weights):
+        return weights_augmentation(weights=weights, style=self.weights_style) 
     
     def __call__(self, weights):
-        pass
+        state = self.weights_augmentation(weights=weights)
+        prediction = self.model(tf.expand_dims(state, axis=0), training=False)
+        return prediction, state
     
-    def _build_enviroment(self, devices='0'):
-
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
-        gpus = tf.config.experimental.list_physical_devices("GPU")
-        print_green(gpus)
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-            
-    def _build_model(self):
-        model = model_factory(self.args['model'])
-
-        # model restore
-        if self.args['model'].get('restore_model'):
-            self.model = self.model_restore(self.model)
-        return model
-
-    def _build_dataset(self, new_students = []):
-        dataset_args = self.args['dataloader']
+    def train_block(self, epoch, train_steps_per_epoch, train_iter):
+        with trange(train_steps_per_epoch, desc="Train steps", leave=False) as t:
+            self.mt_loss_fn.reset_states()
+            self.train_metrics.reset_states()
+            for train_step in t:
+                # train
+                data = train_iter.get_next()
+                train_loss, gard, train_metrics = self._train_step(data['state'], data['reward'])
+                            
+            etr_loss = self.mt_loss_fn.result()
+            etr_metric = self.train_metrics.result()
+            return etr_loss, etr_metric
         
-        datadir = "weight_space"
-        dataset_args['path'] = os.path.join(self.args['log_path'], datadir)
-        dataloader = dataset_factory(dataset_args)
-        print_green("-"*10+"build_dataset"+"-"*10)
-        train_dataset, valid_dataset, test_dataset = dataloader.load_dataset(new_students = new_students)
-        return train_dataset, valid_dataset, test_dataset, dataloader
-
-    def _build_loss_fn(self):
-        loss_fn = {}
-        loss_fn = tf.keras.losses.get(self.args['loss']['name'])
-        mloss_fn = tf.keras.metrics.Mean()
-        return loss_fn, mloss_fn
-    
-    def _build_metrics(self):
-        metrics = {}
-        metrics_name = self.args['metrics']['name']
-        metrics[metrics_name] = tf.keras.metrics.get(metrics_name)
-        return metrics
- 
-    def _build_optimizer(self):
-        optimizer_args = self.args['optimizer']
-        optimizer = tf.keras.optimizers.get(optimizer_args['name'])
-        optimizer.learning_rate = optimizer_args['learning_rate']
-        
-        return optimizer
-    def _create_logdir(self):
-        logdir = "tensorboard/" + "sp-{}".format(self.id) + "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
-        logdir = os.path.join(self.args['log_path'], logdir)
-        check_mkdir(logdir)
-        return logdir
-    
-    def _build_logger(self):
-        logger = tf.summary.create_file_writer(self.logdir)
-        return logger
-
-    def model_save(self, name):
-        save_path = os.path.join(self.logdir, '{}_{}'.format(type(self.model).__name__, name))
-
-        save_msg = '\033[33m[Model Status]: Saving {} model in {:}.\033[0m'.format(name, save_path)
-        print(save_msg)
-        
-        self.model.save(save_path, overwrite=True, save_format='tf')
-
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
-    def _train_step(self, inputs, labels):
-        raise NotImplementedError("supervisor need _train_step func.")
-
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
-    def _valid_step(self, inputs, labels):
-        raise NotImplementedError("supervisor need _valid_step func.")
-
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
-    def _test_step(self, inputs, labels):
-        raise NotImplementedError("supervisor need _test_step func.")
-
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
-    def _parse_tensor(self, x):
-        parsed_tensors = {}
-        for feat, tensor in x.items():
-            batch_serilized_tensor = []
-            for i in range(256):
-                batch_serilized_tensor.append(tf.io.parse_tensor(tensor[i], tf.float32))
-            parsed_tensors = tf.concat(batch_serilized_tensor, axis=0)
-        return parsed_tensors
+    def test_block(self, epoch, test_iter):
+        with trange(self.dataloader.info['test_step'], desc="Test steps") as t:
+            self.mtt_loss_fn.reset_states()
+            self.test_metrics.reset_states()
+            for test_step in t:
+                t_data = test_iter.get_next()
+                t_loss, test_metrics = self._test_step(t_data['state'], t_data['reward'])
+                t.set_postfix(test_loss=t_loss.numpy())
+            ete_loss = self.mtt_loss_fn.result()
+            ete_metric = self.test_metrics.result()
+            return ete_loss, ete_metric
     
     def train(self):
-
         # parse train loop control args
-        train_loop_control_args = self.args['train_loop_control']
-        train_args = train_loop_control_args['train']
+        train_loop_args = self.args['train_loop']
+        train_args = train_loop_args['train']
+        valid_args = train_loop_args['valid']
 
         # dataset train, valid, test
-        epoch = 0
-        step = 0
         train_iter = iter(self.train_dataset)
         valid_iter = iter(self.valid_dataset)
         test_iter = iter(self.test_dataset)
         
-        raise NotImplementedError("need train, valid, test logic.")
+        
+        total_epochs = self.dataloader.info['epochs']  
+        train_steps_per_epoch = self.dataloader.info['train_step']
+
+        # train, valid, test
+        # tqdm update, logger
+        with trange(total_epochs, desc="Epochs") as e:
+            for epoch in e:
+                
+                # hparams setting
+                self.hparam_tuning(train_args, epoch, total_epochs)
+                # train
+                etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter)
+                # test
+                ete_loss, ete_metric = self.test_block(epoch, test_iter)
+                    
+                e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy(), ete_loss=ete_loss.numpy(), 
+                              ete_metric=ete_metric.numpy(), lr = self.optimizer.learning_rate.numpy())
+                
+                with self.logger.as_default():
+                    tf.summary.scalar("etr_loss", etr_loss, step=epoch)
+                    tf.summary.scalar("etr_metric", etr_metric, step=epoch)
+                    tf.summary.scalar("ete_loss", ete_loss, step=epoch)
+                    tf.summary.scalar("ete_metric", ete_metric, step=epoch)
+        
+        self.model.summary()
+        self.model_save(name="finished")
 
     def run(self, keep_train=False, new_students=[]):
         
@@ -149,11 +115,9 @@ class Supervisor(object):
             # build optimizer
             self.optimizer = self._build_optimizer()
 
-            # build model
-            self.model = self._build_model()
-
             # build losses and metrics
-            self.loss_fn, self.mloss_fn = self._build_loss_fn()
+            self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
+            self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
             
             # build weights and writter
             self.logger = self._build_logger()

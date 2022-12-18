@@ -57,7 +57,7 @@ class DNNWeightsLoader(BaseDataLoader):
         
         feature_config = {
                 'valid_loss': {"type": 'value', "length": 1, "dtype": tf.float32},
-                'vars': {"type": 'list', "length": yaml_feature_config['vars_length']['value'], "dtype": tf.string},
+                'vars': {"type": 'value', "length": 1, "dtype": tf.string},
             }
 
         return feature_config, info
@@ -155,6 +155,7 @@ class DNNWeightsLoader(BaseDataLoader):
         valid_dataset = valid_dataset.repeat(self.info["epochs"])
         valid_dataset = valid_dataset.batch(self.dataloader_args['batch_size'])
         
+        test_dataset = test_dataset.repeat(-1)
         test_dataset = test_dataset.batch(self.dataloader_args['batch_size'])
         
         return train_dataset, valid_dataset, test_dataset
@@ -233,15 +234,19 @@ class DNNRL(DNNWeightsLoader):
         info = self.get_info_inference(yaml_feature_config['num_of_students'],
                                             yaml_feature_config['sample_per_student'])
         
+        # feature_config = {
+        #             'states': {"type": 'value', "length": 1, "dtype": tf.string},
+        #             'metrics':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'Q':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'actions':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'act_grads':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'steps':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'rewards':{"type": 'value', "length": 1, "dtype": tf.string}
+        #     }
         feature_config = {
-                    'states': {"type": 'value', "length": 1, "dtype": tf.string},
-                    'metrics':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'Q':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'actions':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'act_grads':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'steps':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'rewards':{"type": 'value', "length": 1, "dtype": tf.string}
-            }
+                'state': {"type": 'value', "length": 1, "dtype": tf.string},
+                'reward':{"type": 'value', "length": 1, "dtype": tf.string}
+        }
 
         return feature_config, info
 

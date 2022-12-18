@@ -1,24 +1,25 @@
 experiment:
   context:
-    name: tki-cifar10-ep300-da-nr-ode #for each exp
-    devices: 4
-    multi-p: 3
-    dist: False
+    name: cifar10 #for each exp
+    # devices: 1
+    # multi-p: 1
+    # dist:
+    #   devices: 4
     log_path: ./log
 
   main_loop:
     warmup: 
-      student_nums: 20
+      student_nums: 0
       supervisor_iters: 1
-    nums: 50
-    student_nums: 3
+    nums: 0
+    student_nums: 0
 
   student:
-    name: gpu4-ep300
+    name: naive
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 512
-      epochs: 300
+      batch_size: 128
+      epochs: 100
       da: True # data augumentation
     model:
       name: dnn 
@@ -27,41 +28,57 @@ experiment:
     loss:
       name: CategoricalCrossentropy
     metrics: 
-      name: categorical_accuracy
+      name: CategoricalAccuracy
     optimizer:
       name: sgd 
       learning_rate: 0.1 
     train_loop:
         train:
           lr_decay: False # decay
-          action: fix
-          policy: e_greedy
+          discount_factor: 0.9
+          action:
+            style: fix_n
+            act_space: [0.1,0.5,1.0,5.0,10.0]
+          policy: 
+            style: epsilon_greedy
+            epsilon: 0.50
         valid:
-          q_mode: static
-          weight_space: norm_reduce
-          valid_gap: 10
-          itki: False
+          q_style: multi_action
+          save_knowledge: ["state", "reward"]
+          discount_factor: 0.9
+          weights_style: flat_imagelization # imagelization
+          valid_gap: 100
+          online: False
         test:
           epoch: -1
         visual: False
 
   supervisor:
+    name: naive
     dataloader:
-      name: dnn_sr_RL
+      name: dnn_RL
       exp: decay
       replay_window: 25
-      batch_size: 128
-      epochs: 10
+      batch_size: 32
+      epochs: 100
     model:
       name: dnn # default dnn
-      units: [128,64,32,1] # default 128,64,64,32
-      embedding: True
-      activations: [relu,relu,relu,relu] # default relu
+      units: [128,64,32,5] # default 128,64,32,5
+      activations: [relu,relu,relu,linear] # default relu
+      downsampling: False
     optimizer:
       name: sgd
       learning_rate: 0.01
     loss:
       name: MeanSquaredError #MeanAbsoluteError 
+    metrics: 
+      name: MeanSquaredError
     train_loop:
         train:
-          weight_space: sum_reduce
+          lr_decay: False # decay
+          weights_style: flat_imagelization # stack_imagelization
+        valid:
+          valid_gap: 10
+          epoch: -1
+        test:
+          epoch: -1
