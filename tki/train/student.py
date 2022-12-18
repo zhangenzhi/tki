@@ -54,6 +54,7 @@ class Student(Trainer):
                 zip(gradients, self.supervisor.trainable_variables))
             
         return loss
+    
         # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
         
@@ -63,7 +64,8 @@ class Student(Trainer):
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
             gradients = tape.gradient(loss, self.model.trainable_variables)
             if not first_batch:
-                self.optimizer.apply_gradients(zip(action*gradients, self.model.trainable_variables))
+                grads = [action*g for g in gradients]
+                self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
         self.mt_loss_fn.update_state(loss)
         
