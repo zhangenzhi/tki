@@ -20,7 +20,7 @@ experiment:
       name: cifar10 # cifar100, mnist
       batch_size: 128
       epochs: 100
-      da: True # data augumentation
+      da: False # data augumentation
     model:
       name: dnn 
       units: [128,64,32,10] 
