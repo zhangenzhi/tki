@@ -139,7 +139,7 @@ class DNNWeightsLoader(BaseDataLoader):
         print_green("students:{}".format(filelist))
         self.info = self.get_info_inference(num_of_students=len(filelist),sample_per_student=self.info['sample_per_student'])
         full_dataset = self._load_tensor_from_tfrecord(filelist=filelist, feature_config=self.feature_config)
-        full_dataset = full_dataset.shuffle(self.info['total_samples'])
+        full_dataset = full_dataset.shuffle(1000)
         
         train_dataset = full_dataset.take(self.info['train_samples'])
         
