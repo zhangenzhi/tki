@@ -106,7 +106,7 @@ class Supervisor(Trainer):
         else:
             # set enviroment
             print_green("-"*10+"run_init"+"-"*10)
-            self._build_enviroment()
+            # self._build_enviroment()
 
             # prepare dataset
             self.train_dataset, self.valid_dataset, self.test_dataset, \
