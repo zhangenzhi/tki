@@ -16,6 +16,7 @@ class Student(Trainer):
         super(Student, self).__init__(trainer_args=student_args, id=id)
         
         ## RL
+        self.action = 1.0
         self.act_space = ActionSpace(action_args=student_args.train_loop.train.action)
         self.policy = PolicySpace(policy_args=student_args.train_loop.train.policy)
         self.training_knowledge = ReplayBuffer(buffer_args=student_args.train_loop.valid, 
@@ -53,6 +54,20 @@ class Student(Trainer):
                 zip(gradients, self.supervisor.trainable_variables))
             
         return loss
+        # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False, action=1.0):
+        
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs)
+            loss = self.loss_fn(labels, predictions)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            if not first_batch:
+                self.optimizer.apply_gradients(zip(action*gradients, self.model.trainable_variables))
+
+        self.mt_loss_fn.update_state(loss)
+        
+        return loss, gradients, train_metrics
     
     def train_block(self, epoch, train_steps_per_epoch, train_iter, valid_args, valid_iter):
         with trange(train_steps_per_epoch, desc="Train steps", leave=False) as t:
@@ -64,11 +79,12 @@ class Student(Trainer):
                 data = train_iter.get_next()
                 first_batch = True if epoch*train_steps_per_epoch+train_step == 0 else False
                 train_loss, train_gard, train_metrics = self._train_step(data['inputs'], data['labels'], 
-                                                                         first_batch=first_batch)
+                                                                         first_batch=first_batch, action=self.action)
                 
                 expect_q_values, state = self.supervisor(self.model.trainable_variables)
                 act_idx = self.policy(expect_q_values, self.id)
                 action = self.act_space(act_idx)
+                self.action = action
                 
                 
                 # valid

@@ -105,7 +105,7 @@ class Trainer(object):
                 print_green("Current decayed learning rate is {}".format(self.optimizer.learning_rate.numpy()))
         
 
-    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
         
         with tf.GradientTape() as tape:
@@ -113,8 +113,7 @@ class Trainer(object):
             loss = self.loss_fn(labels, predictions)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
             gradients = tape.gradient(loss, self.model.trainable_variables)
-            if not first_batch:
-                self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
         self.mt_loss_fn.update_state(loss)
         
