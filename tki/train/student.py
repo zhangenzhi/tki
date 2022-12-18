@@ -91,7 +91,7 @@ class Student(Trainer):
                     expect_q_values, state = self.supervisor(self.model.trainable_variables)
                     act_idx = self.policy(expect_q_values, self.id)
                     action = self.act_space(act_idx)
-                    self.action = self.action
+                    self.action = action
                     
                     valid_loss, valid_metrics = self.valid_block(train_step, valid_args, valid_iter)
                     
