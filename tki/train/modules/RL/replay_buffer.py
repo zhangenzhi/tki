@@ -13,7 +13,7 @@ class ReplayBuffer(object):
         self.student_id = student_id
         self.q_style = buffer_args.q_style
         self.log_path= log_path
-        self.weight_dir, self.writter = self._build_writter()
+        self.weight_dir, self.writter,self.weight_file = self._build_writter()
         
         self.discount_factor = buffer_args.discount_factor
         self.training_knowledge = edict({'state':[], 
@@ -34,7 +34,7 @@ class ReplayBuffer(object):
         check_mkdir(weight_dir)
         weight_file = os.path.join(weight_dir, '{}.tfrecords'.format(self.student_id))
         writter = tf.io.TFRecordWriter(weight_file)
-        return weight_dir, writter
+        return weight_dir, writter, weight_file
     
     def update_buffer(self, 
                       state, 

@@ -147,6 +147,6 @@ class Student(Trainer):
         print('Finished training student {}'.format(self.id))
 
         if connect_queue != None:
-            connect_queue.put(self.training_knowledge.weight_dir)
+            connect_queue.put(self.training_knowledge.weight_file)
 
-        return self.training_knowledge.weight_dir 
+        return self.training_knowledge.weight_file

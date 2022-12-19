@@ -25,9 +25,9 @@ class PolicySpace(object):
             self.epsilon = 0.8
         if id >= 100:
             self.epsilon = 0.4
-        if id >= 200:
+        if id >= 150:
             self.epsilon = 0.2
-        if id >= 400:
+        if id >= 200:
             self.epsilon = 0.1
-        if id >= 500:
+        if id >= 250:
             self.epsilon = 0.05
