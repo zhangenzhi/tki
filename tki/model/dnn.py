@@ -90,8 +90,10 @@ class DNN(tf.keras.Model):
 
     def call(self, inputs):
         
+        x = inputs
+        
         if self.normalization:
-            x = self.nl(inputs)
+            x = self.nl(x)
             
         if self.downsampling:
             x = self.ds(x)
