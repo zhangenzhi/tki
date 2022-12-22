@@ -14,7 +14,7 @@ class Supervisor(Trainer):
         self.model = self._build_model()
         self.name = "sp_" + supervisor_args.name
         
-        self.args.dataloader.path = os.path.join(supervisor_args.log_path,"weight_space")
+        self.args.dataloader.path = os.path.join(supervisor_args.log_path, "weight_space")
         self.weights_style = supervisor_args.train_loop.train.weights_style
 
     def weights_augmentation(self, weights):
@@ -25,6 +25,22 @@ class Supervisor(Trainer):
         prediction = self.model(tf.expand_dims(state, axis=0), training=False)
         return prediction, state
     
+    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False):
+        
+        with tf.GradientTape() as tape:
+            states, actions = inputs
+            predictions = self.model(states)
+            predict_value = tf.gather(predictions, actions)
+            loss = self.loss_fn(labels, predict_value)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predict_value))
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+
+        self.mt_loss_fn.update_state(loss)
+        
+        return loss, gradients, train_metrics
+    
     def train_block(self, epoch, train_steps_per_epoch, train_iter):
         with trange(train_steps_per_epoch, desc="Train steps", leave=False) as t:
             self.mt_loss_fn.reset_states()
@@ -32,23 +48,12 @@ class Supervisor(Trainer):
             for train_step in t:
                 # train
                 data = train_iter.get_next()
-                train_loss, gard, train_metrics = self._train_step(data['state'], data['reward'])
+                train_loss, gard, train_metrics = self._train_step((data['state'], data['action']), data['reward'])
                             
             etr_loss = self.mt_loss_fn.result()
             etr_metric = self.train_metrics.result()
             return etr_loss, etr_metric
         
-    def test_block(self, epoch, test_iter):
-        with trange(self.dataloader.info['test_step'], desc="Test steps") as t:
-            self.mtt_loss_fn.reset_states()
-            self.test_metrics.reset_states()
-            for test_step in t:
-                t_data = test_iter.get_next()
-                t_loss, test_metrics = self._test_step(t_data['state'], t_data['reward'])
-                t.set_postfix(test_loss=t_loss.numpy())
-            ete_loss = self.mtt_loss_fn.result()
-            ete_metric = self.test_metrics.result()
-            return ete_loss, ete_metric
     
     def train(self):
         # parse train loop control args

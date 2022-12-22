@@ -44,7 +44,7 @@ experiment:
             epsilon: 0.50
         valid:
           q_style: multi_action
-          save_knowledge: ["state", "reward"]
+          save_knowledge: ["state", "reward", "valid_metric","expect_q_values"]
           discount_factor: 0.9
           weights_style: flat_imagelization # imagelization
           valid_gap: 100

@@ -155,24 +155,14 @@ class ReplayBuffer(object):
             self.training_knowledge.reward.append(tf.constant(np_q))
 
     def multi_action_temporal_diffrernce(self):
-        if self.supervisor == None:
-                # baseline without q-net
-                values = self.training_knowledge['values']
-                self.training_knowledge['Q'] = values
-        else:
-            # boostrap Q value
-            values = self.training_knowledge['values']
-            rewards = self.training_knowledge['rewards']
-            for i in range(len(rewards)):
-                np_values = values[i].numpy()
-                e_q = rewards[i] + self.discount_factor * values[i][self.act_idx[i]] 
-                np_values[self.act_idx[i]] = e_q
-                values[i] = tf.reshape(tf.constant(np_values), shape=values[i].shape)
-            self.training_knowledge['Q'] = values
-            
-        with self.logger.as_default():
-            for i in range(len(values)):
-                tf.summary.scalar("T_Q", tf.squeeze(values[i][self.act_idx[i]]), step=i)
+        expect_q_values = self.training_knowledge.expect_q_values
+        valid_metric = self.training_knowledge.valid_metric
+        
+        expect_q_values.append([0.0])
+        for idx in range(len(valid_metric)):
+            r = valid_metric[idx] + max(expect_q_values[idx+1]) * self.discount_factor
+            self.training_knowledge.reward.append(tf.constant(r))
+        expect_q_values.pop()
 
     def weight_augmentation(self, weights):
         pass
