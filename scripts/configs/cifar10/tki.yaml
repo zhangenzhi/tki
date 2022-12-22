@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: cifar10 #for each exp
+    name: cifar10-MATD #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -9,7 +9,7 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 0
+      student_nums: 10
       supervisor_iters: 1
     nums: 100
     student_nums: 3
@@ -18,8 +18,8 @@ experiment:
     name: naive
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 128
-      epochs: 100
+      batch_size: 512
+      epochs: 120
       da: False # data augumentation
     model:
       name: dnn 
@@ -38,16 +38,16 @@ experiment:
           discount_factor: 0.9
           action:
             style: fix_n
-            act_space: [0.1,0.5,1.0,5.0,10.0]
+            act_space: [0.1,0.5,1.0,2.5,5.0]
           policy: 
             style: epsilon_greedy
             epsilon: 0.50
         valid:
-          q_style: multi_action
-          save_knowledge: ["state", "reward", "valid_metric","expect_q_values"]
+          q_style: multi_action_temporal_diffrernce #multi_action
+          save_knowledge: ["state", "reward", "act_idx"]
           discount_factor: 0.9
           weights_style: flat_imagelization # imagelization
-          valid_gap: 100
+          valid_gap: 30
           online: False
         test:
           epoch: -1
@@ -64,11 +64,11 @@ experiment:
     model:
       name: dnn # default dnn
       units: [128,64,32,5] # default 128,64,32,5
-      activations: [relu,relu,relu,linear] # default relu
+      activations: [relu,relu,relu,relu] # default relu
       downsampling: True
     optimizer:
       name: sgd
-      learning_rate: 0.01
+      learning_rate: 0.1
     loss:
       name: MeanSquaredError #MeanAbsoluteError 
     metrics: 

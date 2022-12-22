@@ -245,6 +245,7 @@ class DNNRL(DNNWeightsLoader):
         #     }
         feature_config = {
                 'state': {"type": 'value', "length": 1, "dtype": tf.string},
+                'act_idx': {"type": 'value', "length": 1, "dtype": tf.string},
                 'reward':{"type": 'value', "length": 1, "dtype": tf.string}
         }
 
@@ -280,8 +281,10 @@ class DNNRL(DNNWeightsLoader):
             example = tf.io.parse_example(example_proto, feature_describ)
             parsed_example = {}
             for feat, tensor in feature_describ.items():
-                if example[feat].dtype == tf.string:
+                if feat in ['state','reward']:
                     parsed_example[feat] = tf.io.parse_tensor(example[feat], out_type=tf.float32)
+                elif feat in ['act_idx']:
+                    parsed_example[feat] = tf.io.parse_tensor(example[feat], out_type=tf.int32)
                 else:
                     parsed_example[feat] = example[feat]
 

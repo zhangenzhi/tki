@@ -29,9 +29,9 @@ class Supervisor(Trainer):
     def _train_step(self, inputs, labels, first_batch=False):
         
         with tf.GradientTape() as tape:
-            states, actions = inputs
+            states, act_idx = inputs
             predictions = self.model(states)
-            predict_value = tf.gather(predictions, actions)
+            predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
             loss = self.loss_fn(labels, predict_value)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predict_value))
             gradients = tape.gradient(loss, self.model.trainable_variables)
@@ -48,12 +48,11 @@ class Supervisor(Trainer):
             for train_step in t:
                 # train
                 data = train_iter.get_next()
-                train_loss, gard, train_metrics = self._train_step((data['state'], data['action']), data['reward'])
+                train_loss, gard, train_metrics = self._train_step((data['state'], data['act_idx']), data['reward'])
                             
             etr_loss = self.mt_loss_fn.result()
             etr_metric = self.train_metrics.result()
-            return etr_loss, etr_metric
-        
+            return etr_loss, etr_metric 
     
     def train(self):
         # parse train loop control args
@@ -80,16 +79,15 @@ class Supervisor(Trainer):
                 # train
                 etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter)
                 # test
-                ete_loss, ete_metric = self.test_block(epoch, test_iter)
+                # ete_loss, ete_metric = self.test_block(epoch, test_iter)
                     
-                e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy(), ete_loss=ete_loss.numpy(), 
-                              ete_metric=ete_metric.numpy(), lr = self.optimizer.learning_rate.numpy())
+                e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy())
                 
                 with self.logger.as_default():
                     tf.summary.scalar("etr_loss", etr_loss, step=epoch)
                     tf.summary.scalar("etr_metric", etr_metric, step=epoch)
-                    tf.summary.scalar("ete_loss", ete_loss, step=epoch)
-                    tf.summary.scalar("ete_metric", ete_metric, step=epoch)
+                    # tf.summary.scalar("ete_loss", ete_loss, step=epoch)
+                    # tf.summary.scalar("ete_metric", ete_metric, step=epoch)
         
         self.model.summary()
         self.model_save(name="finished")

@@ -61,9 +61,9 @@ class ReplayBuffer(object):
         
         # action
         self.training_knowledge.act_grad.append(act_grad)
-        self.training_knowledge.action.append(action)
-        self.training_knowledge.act_idx.append(act_idx)
-        self.training_knowledge.step.append(step)
+        self.training_knowledge.action.append(tf.constant(action))
+        self.training_knowledge.act_idx.append(tf.constant(act_idx))
+        self.training_knowledge.step.append(tf.constant(step))
         
         return expect_q_values[0][act_idx]
 
@@ -158,10 +158,10 @@ class ReplayBuffer(object):
         expect_q_values = self.training_knowledge.expect_q_values
         valid_metric = self.training_knowledge.valid_metric
         
-        expect_q_values.append([0.0])
+        expect_q_values.append(tf.constant([[0.0]]))
         for idx in range(len(valid_metric)):
-            r = valid_metric[idx] + max(expect_q_values[idx+1]) * self.discount_factor
-            self.training_knowledge.reward.append(tf.constant(r))
+            r = valid_metric[idx] + max(expect_q_values[idx+1][0]) * self.discount_factor
+            self.training_knowledge.reward.append(r)
         expect_q_values.pop()
 
     def weight_augmentation(self, weights):
