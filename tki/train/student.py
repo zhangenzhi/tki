@@ -84,7 +84,6 @@ class Student(Trainer):
                                                                          first_batch=first_batch, action=self.action)
                 
                 
-                
                 # valid
                 if train_step % valid_args['valid_gap'] == 0:
                     

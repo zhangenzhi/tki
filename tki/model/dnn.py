@@ -37,6 +37,7 @@ class DNN(tf.keras.Model):
                  activations=['tanh', 'tanh', 'tanh', 'tanh'],
                  use_bn=False,
                  embedding=False,
+                 normalization=False,
                  downsampling=False,
                  seed=100000,
                  **kwargs
@@ -48,9 +49,11 @@ class DNN(tf.keras.Model):
         self.seed = seed
         self.use_bn = use_bn
         self.downsampling = downsampling
+        self.normalization = normalization
         
         self.flatten = tf.keras.layers.Flatten()
         self.ds = self._build_downsmapling()
+        self.nl = self._build_normalization()
         self.fc_layers = self._build_fc()
         self.fc_act = self._build_act()
         self.fc_bn = self._build_bn()
@@ -65,6 +68,11 @@ class DNN(tf.keras.Model):
         if self.downsampling:
             ds = tf.keras.layers.Conv2D(filters=3,kernel_size=(3,3),strides=8)
             return ds
+    
+    def _build_normalization(self):
+        if self.normalization:
+            nl = tf.keras.layers.BatchNormalization()
+            return nl
             
     def _build_bn(self):
         bn = []
@@ -82,11 +90,14 @@ class DNN(tf.keras.Model):
 
     def call(self, inputs):
         
+        if self.normalization:
+            x = self.nl(inputs)
+            
         if self.downsampling:
-            x = self.ds(inputs)
+            x = self.ds(x)
             x = self.flatten(x)
         else:
-            x = self.flatten(inputs)
+            x = self.flatten(x)
             
         if self.use_bn:
             for layer, act, bn in zip(self.fc_layers, self.fc_act, self.fc_bn):

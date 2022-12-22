@@ -84,8 +84,8 @@ class Supervisor(Trainer):
                 e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy())
                 
                 with self.logger.as_default():
-                    tf.summary.scalar("etr_loss", etr_loss, step=epoch)
-                    tf.summary.scalar("etr_metric", etr_metric, step=epoch)
+                    tf.summary.scalar("etr_loss", etr_loss, step=self.id*total_epochs + epoch)
+                    tf.summary.scalar("etr_metric", etr_metric, step=self.id*total_epochs + epoch)
                     # tf.summary.scalar("ete_loss", ete_loss, step=epoch)
                     # tf.summary.scalar("ete_metric", ete_metric, step=epoch)
         
@@ -93,8 +93,6 @@ class Supervisor(Trainer):
         self.model_save(name="finished")
 
     def run(self, keep_train=False, new_students=[]):
-        
-        self.id += 1
         
         if keep_train:
             # prepare dataset
@@ -127,4 +125,6 @@ class Supervisor(Trainer):
 
             # train
             self.train()
+            
+        self.id += 1
 
