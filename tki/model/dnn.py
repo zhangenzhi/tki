@@ -20,10 +20,12 @@ class Linear(keras.layers.Layer):
         self.w = tf.Variable(
             initial_value=w_init,
             trainable=True, name="w",
+            constraint=lambda z: tf.clip_by_value(z, -10.0, 10.0)
         )
         self.b = tf.Variable(
             initial_value=b_init, trainable=True,
             name="b",
+            constraint=lambda z: tf.clip_by_value(z, -10.0, 10.0)
         )
 
     def call(self, inputs):
