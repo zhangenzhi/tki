@@ -9,7 +9,7 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 10
+      student_nums: 15
       supervisor_iters: 1
     nums: 100
     student_nums: 3
@@ -58,20 +58,20 @@ experiment:
     dataloader:
       name: dnn_RL
       exp: decay
-      replay_window: 10
+      replay_window: 15
       batch_size: 32
-      epochs: 30
+      epochs: 50
     model:
       name: dnn # default dnn
       units: [128,64,32,5] # default 128,64,32,5
       activations: [relu,relu,relu,relu] # default relu
-      normalization: True
+      normalization: False
       downsampling: True
     optimizer:
       name: sgd
-      learning_rate: 0.1
+      learning_rate: 0.01
     loss:
-      name: MeanSquaredError #MeanAbsoluteError 
+      name: MeanAbsoluteError #MeanAbsoluteError 
     metrics: 
       name: MeanSquaredError
     train_loop:
