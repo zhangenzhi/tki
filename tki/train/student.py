@@ -141,7 +141,10 @@ class Student(Trainer):
 
    
         self.train()
-        self.training_knowledge.save_experience()
+        reward = self.training_knowledge.save_experience()
+        with self.logger.as_default():
+            for idx in range(len(reward)):
+                tf.summary.scalar("reward", reward[idx], step=idx)
         
         print('Finished training student {}'.format(self.id))
 

@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: cifar10-MA #for each exp
+    name: cifar10-MA-GP100 #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -47,7 +47,7 @@ experiment:
           save_knowledge: ["state", "reward", "act_idx"]
           discount_factor: 0.9
           weights_style: flat_imagelization # imagelization
-          valid_gap: 60
+          valid_gap: 100
           online: False
         test:
           epoch: -1

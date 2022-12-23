@@ -81,6 +81,8 @@ class ReplayBuffer(object):
         self.write_weights_to_tfrecord()
         self.writter.close()
         
+        return self.training_knowledge.reward
+        
     def training_knowledge_example(self):        
         configs = {}
         examples = []
