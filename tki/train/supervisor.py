@@ -25,10 +25,12 @@ class Supervisor(Trainer):
         prediction = self.model(tf.expand_dims(state, axis=0), training=False)
         return prediction, state
     
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
         
         with tf.GradientTape() as tape:
+            import pdb
+            pdb.set_trace()
             states, act_idx = inputs
             predictions = self.model(states)
             predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
