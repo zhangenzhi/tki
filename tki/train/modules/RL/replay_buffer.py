@@ -145,7 +145,7 @@ class ReplayBuffer(object):
         
         rewards = [valid_metric[-1]]
         for idx in reversed(range(len(valid_metric))):
-            rewards.append(valid_metric[idx] + self.discount_factor*rewards[-1])
+            rewards.append(max([valid_metric[idx]-0.1, 0.0]) + self.discount_factor*rewards[-1])
         rewards = list(reversed(rewards))
         rewards.pop()
         
@@ -157,8 +157,8 @@ class ReplayBuffer(object):
         
         expect_q_values.append(tf.constant([[0.0]]))
         for idx in range(len(valid_metric)):
-            r = valid_metric[idx] + max(expect_q_values[idx+1][0]) * self.discount_factor
-            r = tf.clip_by_value(r, clip_value_min=0.1, clip_value_max=1.0/(1-self.discount_factor))
+            r = max([valid_metric[idx]-0.1, 0.0]) + max(expect_q_values[idx+1][0]) * self.discount_factor
+            r = tf.clip_by_value(r, clip_value_min=0.0, clip_value_max=1.0/(1-self.discount_factor))
             self.training_knowledge.reward.append(r)
         expect_q_values.pop()
 

@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: cifar10-MA-GP100 #for each exp
+    name: cifar10-MA-B #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
