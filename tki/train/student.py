@@ -85,7 +85,7 @@ class Student(Trainer):
                 
                 
                 # valid
-                if train_step % valid_args['valid_gap'] == 0:
+                if (epoch*train_steps_per_epoch+train_step) % valid_args['valid_gap'] == 0:
                     
                     expect_q_values, state = self.supervisor(self.model.trainable_variables)
                     act_idx = self.policy(expect_q_values, self.id)

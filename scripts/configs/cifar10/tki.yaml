@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: cifar10-MATD-NL #for each exp
+    name: cifar10-MA-NL #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -43,11 +43,11 @@ experiment:
             style: epsilon_greedy
             epsilon: 0.50
         valid:
-          q_style: multi_action_temporal_diffrernce #multi_action
+          q_style: multi_action #multi_action
           save_knowledge: ["state", "reward", "act_idx"]
           discount_factor: 0.9
           weights_style: flat_imagelization # imagelization
-          valid_gap: 30
+          valid_gap: 60
           online: False
         test:
           epoch: -1

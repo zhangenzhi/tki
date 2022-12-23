@@ -139,20 +139,15 @@ class ReplayBuffer(object):
                 tf.summary.scalar("T_Q", tf.squeeze(Q[i]), step=i)
 
     def multi_action(self):
-        expect_q_values = self.training_knowledge.expect_q_values
         valid_metric = self.training_knowledge.valid_metric
-        act_idx = self.training_knowledge.act_idx
         
         rewards = [valid_metric[-1]]
         for idx in reversed(range(len(valid_metric))):
             rewards.append(valid_metric[idx] + self.discount_factor*rewards[-1])
         rewards = list(reversed(rewards))
         rewards.pop()
-            
-        for q, r, a in zip(expect_q_values, rewards, act_idx):
-            np_q = q.numpy()
-            np_q[0][a] = r
-            self.training_knowledge.reward.append(tf.constant(np_q))
+        
+        self.training_knowledge.reward = rewards
 
     def multi_action_temporal_diffrernce(self):
         expect_q_values = self.training_knowledge.expect_q_values
