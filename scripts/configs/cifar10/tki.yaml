@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: cifar10-MA-B #for each exp
+    name: cifar10-MA-B-DF #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -38,14 +38,14 @@ experiment:
           discount_factor: 0.9
           action:
             style: fix_n
-            act_space: [0.1,0.5,1.0,2.5,5.0]
+            act_space: [0.1,0.5,1.0,2.0,4.0]
           policy: 
             style: epsilon_greedy
             epsilon: 0.50
         valid:
           q_style: multi_action #multi_action
           save_knowledge: ["state", "reward", "act_idx"]
-          discount_factor: 0.9
+          discount_factor: 0.5
           weights_style: flat_imagelization # imagelization
           valid_gap: 100
           online: False

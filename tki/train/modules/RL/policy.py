@@ -2,7 +2,7 @@ import numpy as np
 
 class PolicySpace(object):
     def __init__(self, policy_args) -> None:
-        self.epsilon = policy_args.epsilon
+        self.base = policy_args.epsilon
         self.style = policy_args.style
        
     def __call__(self, values, id):
@@ -21,13 +21,15 @@ class PolicySpace(object):
             return max(range(values.shape[-1]), key=values[0][:].__getitem__) 
 
     def epsilon_aneal(self, id):
-        if id < 50:
-            self.epsilon = 0.8
-        if id >= 100:
-            self.epsilon = 0.4
-        if id >= 150:
-            self.epsilon = 0.2
-        if id >= 200:
-            self.epsilon = 0.1
-        if id >= 250:
-            self.epsilon = 0.05
+        if id < 20:
+            self.epsilon = self.base
+        elif 20 <= id <= 40:
+            self.epsilon = self.base / 2.0
+        elif 40 <= id <= 80:
+            self.epsilon = self.base / 4.0
+        elif 80 <= id <= 160:
+            self.epsilon = self.base / 8.0
+        elif 160 <= id <= 240:
+            self.epsilon = self.base / 16.0
+        else:
+            self.epsilon = 0.0
