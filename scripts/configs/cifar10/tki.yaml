@@ -9,10 +9,10 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 0
+      student_nums: 10
       supervisor_iters: 1
-    nums: 0
-    student_nums: 0
+    nums: 100
+    student_nums: 3
 
   student:
     name: naive

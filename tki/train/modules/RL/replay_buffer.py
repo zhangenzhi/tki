@@ -161,6 +161,7 @@ class ReplayBuffer(object):
         expect_q_values.append(tf.constant([[0.0]]))
         for idx in range(len(valid_metric)):
             r = valid_metric[idx] + max(expect_q_values[idx+1][0]) * self.discount_factor
+            r = tf.clip_by_value(r, clip_value_min=0.1, clip_value_max=1.0/(1-self.discount_factor))
             self.training_knowledge.reward.append(r)
         expect_q_values.pop()
 

@@ -29,8 +29,6 @@ class Supervisor(Trainer):
     def _train_step(self, inputs, labels, first_batch=False):
         
         with tf.GradientTape() as tape:
-            import pdb
-            pdb.set_trace()
             states, act_idx = inputs
             predictions = self.model(states)
             predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
