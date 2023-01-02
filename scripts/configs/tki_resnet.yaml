@@ -18,9 +18,9 @@ experiment:
     name: hvd
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 128 # 32*4
-      epochs: 120
-      da: False # data augumentation
+      batch_size: 256 # 32*4
+      epochs: 200
+      da: True # data augumentation
     model:
       name: resnet56 
       classes: 10 
@@ -33,7 +33,7 @@ experiment:
       learning_rate: 0.025
     train_loop:
         train:
-          lr_decay: False # decay
+          lr_decay: True # decay
           discount_factor: 0.9
           action:
             style: fix_n
