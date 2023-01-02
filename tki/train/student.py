@@ -24,6 +24,7 @@ class Student(Trainer):
                                                student_id=self.id)
         
         # load supervisor
+        self.supervisor = None
         if supervisor != None:
             self.supervisor = supervisor
         else:

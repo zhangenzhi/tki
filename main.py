@@ -29,8 +29,8 @@ def main():
     
     if yaml_configs.experiment.context.get('multi-p'):
         ctr = MultiController(yaml_configs)
-    elif yaml_configs.experiment.context.get('dist'):
-        ctr = DistController(yaml_configs)
+    # elif yaml_configs.experiment.context.get('dist'):
+    #     ctr = DistController(yaml_configs)
     else:
         ctr = BaseController(yaml_configs)
     
