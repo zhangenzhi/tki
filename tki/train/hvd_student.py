@@ -53,14 +53,15 @@ class HVDStudent(Student):
             loss = self.loss_fn(labels, predictions)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
         
-        grads = tape.gradient(loss, self.model.trainable_variables)
         self.mt_loss_fn.update_state(loss)
         
         if first_batch:
+            grads = None
             hvd.broadcast_variables(self.model.variables, root_rank=0)
             hvd.broadcast_variables(self.optimizer.variables(), root_rank=0)
         else:
             tape = hvd.DistributedGradientTape(tape)
+            grads = tape.gradient(loss, self.model.trainable_variables)
             grads = [action*g for g in grads]
             self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         
