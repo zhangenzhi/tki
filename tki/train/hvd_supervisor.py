@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
+hvd.init()
 
 from tki.tools.utils import check_mkdir
 from tki.train.modules.RL.action import weights_augmentation
@@ -13,7 +14,6 @@ class HVDSupervisor(Supervisor):
         super(HVDSupervisor, self).__init__(supervisor_args, id = id)
         
     def _build_enviroment(self):
-        hvd.init()
         gpus = tf.config.experimental.list_physical_devices('GPU')
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
