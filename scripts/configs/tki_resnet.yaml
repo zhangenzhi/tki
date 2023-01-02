@@ -53,7 +53,7 @@ experiment:
         visual: False
 
   supervisor:
-    name: naive
+    name: hvd
     dataloader:
       name: dnn_RL
       exp: decay
