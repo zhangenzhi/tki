@@ -8,10 +8,10 @@ from easydict import EasyDict as edict
 from tki.train.modules.RL.action import ActionSpace
 from tki.train.modules.RL.policy import PolicySpace
 
-from tki.train.student import Student
+from tki.train.hvd_trainer import HVDTrainer
 from tki.tools.utils import print_warning, print_green, print_error, print_normal
 
-class HVDStudent(Student):
+class HVDStudent(HVDTrainer):
     
     def __init__(self, student_args, supervisor = None, id = 0):
         super(HVDStudent, self).__init__(student_args=student_args, 
