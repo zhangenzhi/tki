@@ -13,7 +13,7 @@ class ReplayBuffer(object):
         self.student_id = student_id
         self.q_style = buffer_args.q_style
         self.log_path= log_path
-        self.weight_dir, self.writter,self.weight_file = self._build_writter()
+        self.weight_dir, self.writter, self.weight_file = self._build_writter()
         
         self.discount_factor = buffer_args.discount_factor
         self.training_knowledge = edict({'state':[], 
@@ -33,7 +33,7 @@ class ReplayBuffer(object):
         weight_dir = os.path.join(self.log_path, "weight_space")
         check_mkdir(weight_dir)
         weight_file = os.path.join(weight_dir, '{}.tfrecords'.format(self.student_id))
-        writter = tf.io.TFRecordWriter(weight_file)
+        writter = None
         return weight_dir, writter, weight_file
     
     def update_buffer(self, 
@@ -47,6 +47,7 @@ class ReplayBuffer(object):
                       valid_loss, 
                       valid_metric, 
                       step):
+            
         # state
         self.training_knowledge.state.append(state)
         
@@ -78,6 +79,8 @@ class ReplayBuffer(object):
         elif self.q_style == 'multi_action':
             self.multi_action()
         
+            
+        self.writter = tf.io.TFRecordWriter(self.weight_file)
         self.write_weights_to_tfrecord()
         self.writter.close()
         
