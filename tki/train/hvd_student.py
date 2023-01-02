@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import horovod.tensorflow as hvd
+hvd.init()
 
 # others
 from tqdm import trange
@@ -14,9 +15,10 @@ from tki.tools.utils import print_warning, print_green, print_error, print_norma
 
 class HVDStudent(Student):
     
-    def __init__(self, trainer_args, id):
-        hvd.init()
-        super(HVDStudent, self).__init__(trainer_args, id)
+    def __init__(self, student_args, supervisor = None, id = 0):
+        super(HVDStudent, self).__init__(student_args=student_args, 
+                                        supervisor=supervisor, 
+                                        id=id)
         
     
     def _build_enviroment(self):
