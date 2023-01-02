@@ -50,7 +50,7 @@ class HVDStudent(Student):
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
         
         with tf.GradientTape() as tape:
-            predictions = self.model(inputs,training=True)
+            predictions = self.model(inputs, training=True)
             loss = self.loss_fn(labels, predictions)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
         
