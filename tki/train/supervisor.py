@@ -10,7 +10,9 @@ from tki.train.trainer import Trainer
 class Supervisor(Trainer):
     def __init__(self, supervisor_args, id = 0):
         super(Supervisor, self).__init__(trainer_args=supervisor_args, id=id)
+        
         # build model
+        self._build_enviroment()
         self.model = self._build_model()
         self.name = "sp_" + supervisor_args.name
         
@@ -107,7 +109,6 @@ class Supervisor(Trainer):
         else:
             # set enviroment
             print_green("-"*10+"run_init"+"-"*10)
-            self._build_enviroment()
 
             # prepare dataset
             self.train_dataset, self.valid_dataset, self.test_dataset, \
