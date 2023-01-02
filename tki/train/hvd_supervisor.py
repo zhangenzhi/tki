@@ -11,6 +11,13 @@ from tki.train.supervisor import Supervisor
 class HVDSupervisor(Supervisor):
     def __init__(self, supervisor_args, id = 0):
         super(HVDSupervisor, self).__init__(supervisor_args, id = id)
+        
+    def _build_enviroment(self):
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        if gpus:
+            tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
     
     def update(self, inputs, labels):
         
