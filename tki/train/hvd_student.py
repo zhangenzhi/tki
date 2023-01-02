@@ -34,6 +34,7 @@ class HVDStudent(Student):
         optimizer_args = self.args.optimizer
         optimizer = tf.keras.optimizers.get(optimizer_args.name)
         optimizer.learning_rate = optimizer_args.learning_rate * hvd.size()
+        optimizer = hvd.DistributedOptimizer(optimizer)
         self.base_lr = optimizer_args.learning_rate
 
         return optimizer
