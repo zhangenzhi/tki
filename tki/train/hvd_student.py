@@ -58,7 +58,8 @@ class HVDStudent(Student):
         grads = tape.gradient(loss, self.model.trainable_variables)
         
         grads = [action*g for g in grads]
-        print(grads[-1])
+        if hvd.rank() == 0:
+            print(grads[-1])
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         self.mt_loss_fn.update_state(loss)
         
