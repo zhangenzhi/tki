@@ -9,20 +9,22 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 15
-      supervisor_iters: 1
-    nums: 100
-    student_nums: 3
+      student_nums: 1
+      supervisor_iters: 0
+    nums: 0
+    student_nums: 0
 
   student:
     name: naive
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 512
+      batch_size: 128
       epochs: 120
       da: False # data augumentation
     model:
-      name: dnn 
+      # name: resnet56
+      # classes: 10 
+      name: dnn
       units: [128,64,32,10] 
       activations: [relu,relu,relu,softmax] 
     loss:
@@ -31,7 +33,7 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.1 
+      learning_rate: 0.01 
     train_loop:
         train:
           lr_decay: False # decay

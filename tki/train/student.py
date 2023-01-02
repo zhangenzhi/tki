@@ -58,9 +58,8 @@ class Student(Trainer):
     
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
-        
         with tf.GradientTape() as tape:
-            predictions = self.model(inputs)
+            predictions = self.model(inputs, training=True)
             loss = self.loss_fn(labels, predictions)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
             gradients = tape.gradient(loss, self.model.trainable_variables)
