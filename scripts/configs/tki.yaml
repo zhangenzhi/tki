@@ -22,18 +22,18 @@ experiment:
       epochs: 120
       da: False # data augumentation
     model:
-      # name: resnet56
-      # classes: 10 
-      name: dnn
-      units: [128,64,32,10] 
-      activations: [relu,relu,relu,softmax] 
+      name: resnet56
+      classes: 10 
+      # name: dnn
+      # units: [128,64,32,10] 
+      # activations: [relu,relu,relu,softmax] 
     loss:
       name: CategoricalCrossentropy
     metrics: 
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.01 
+      learning_rate: 0.1 
     train_loop:
         train:
           lr_decay: False # decay

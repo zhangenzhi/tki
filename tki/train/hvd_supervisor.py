@@ -2,8 +2,8 @@
 import os
 import tensorflow as tf
 from datetime import datetime
-import horovod.tensorflow as hvd
-hvd.init()
+# import horovod.tensorflow as hvd
+# hvd.init()
 
 from tki.tools.utils import check_mkdir
 from tki.train.modules.RL.action import weights_augmentation
