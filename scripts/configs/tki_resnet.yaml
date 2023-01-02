@@ -18,7 +18,7 @@ experiment:
     name: hvd
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 128
+      batch_size: 32 # 32*4
       epochs: 120
       da: False # data augumentation
     model:
