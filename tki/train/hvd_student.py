@@ -45,7 +45,7 @@ class HVDStudent(Student):
             check_mkdir(logdir)
         return logdir
     
-    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
         
         with tf.GradientTape() as tape:
