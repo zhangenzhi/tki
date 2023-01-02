@@ -14,6 +14,7 @@ from tki.train.modules.RL.policy import PolicySpace
 
 from tki.train.student import Student
 from tki.tools.utils import print_warning, print_green, print_error, print_normal, check_mkdir
+from tki.train.utils import ForkedPdb
 
 class HVDStudent(Student):
     
@@ -55,8 +56,8 @@ class HVDStudent(Student):
         
         tape = hvd.DistributedGradientTape(tape)
         grads = tape.gradient(loss, self.model.trainable_variables)
-        import pdb
-        pdb.set_trace()
+        
+        ForkedPdb().set_trace()
         grads = [action*g for g in grads]
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         self.mt_loss_fn.update_state(loss)
