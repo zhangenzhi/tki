@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
-hvd.init()
 
 # others
 from tqdm import trange
