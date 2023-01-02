@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import tensorflow as tf
+from datetime import datetime
 import horovod.tensorflow as hvd
 hvd.init()
 
@@ -11,7 +13,7 @@ from tki.train.modules.RL.action import ActionSpace
 from tki.train.modules.RL.policy import PolicySpace
 
 from tki.train.student import Student
-from tki.tools.utils import print_warning, print_green, print_error, print_normal
+from tki.tools.utils import print_warning, print_green, print_error, print_normal, check_mkdir
 
 class HVDStudent(Student):
     
@@ -35,6 +37,13 @@ class HVDStudent(Student):
         self.base_lr = optimizer_args.learning_rate
 
         return optimizer
+    
+    def _create_logdir(self):
+        logdir = "tensorboard/" + "{}-{}".format(self.name, self.id) + "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = os.path.join(self.args.log_path, logdir)
+        if hvd.rank() == 0:
+            check_mkdir(logdir)
+        return logdir
     
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
