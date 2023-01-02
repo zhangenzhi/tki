@@ -1,0 +1,91 @@
+import os
+from tqdm import trange
+import tensorflow as tf
+import horovod.tensorflow as hvd
+
+from tki.train.trainer import Trainer
+
+
+class HVDTrainer(Trainer):
+    def __init__(self, trainer_args, id):
+        super(HVDTrainer, self).__init__(trainer_args, id)
+        
+        hvd.init()
+    
+    def _build_enviroment(self):
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        if gpus:
+            tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
+    
+    def _build_optimizer(self):
+        optimizer_args = self.args.optimizer
+        optimizer = tf.keras.optimizers.get(optimizer_args.name)
+        optimizer.learning_rate = optimizer_args.learning_rate * hvd.size()
+        self.base_lr = optimizer_args.learning_rate
+
+        return optimizer
+    
+    @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False):
+        
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs)
+            loss = self.loss_fn(labels, predictions)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
+            
+        tape = hvd.DistributedGradientTape(tape)
+        grads = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+        self.mt_loss_fn.update_state(loss)
+        
+        if first_batch:
+            hvd.broadcast_variables(self.model.variables, root_rank=0)
+            hvd.broadcast_variables(self.optimizer.variables(), root_rank=0)
+        
+        return loss, grads, train_metrics
+    
+    def train(self):
+        
+        # parse train loop control args
+        train_loop_args = self.args['train_loop']
+        train_args = train_loop_args['train']
+        valid_args = train_loop_args['valid']
+
+        # dataset train, valid, test
+        train_iter = iter(self.train_dataset)
+        valid_iter = iter(self.valid_dataset)
+        test_iter = iter(self.test_dataset)
+        
+        
+        total_epochs = self.dataloader.info['epochs']  
+        train_steps_per_epoch = self.dataloader.info['train_step']
+
+        # train, valid, test
+        # tqdm update, logger
+        with trange(total_epochs, desc="Epochs") as e:
+            for epoch in e:
+                # hparams setting
+                self.hparam_tuning(train_args, epoch, total_epochs)
+
+                # train
+                etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter, valid_args, valid_iter)
+                
+                # test
+                ete_loss, ete_metric = self.test_block(epoch, test_iter)
+                
+                if hvd.rank() == 0:
+                    e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy(), ete_loss=ete_loss.numpy(), 
+                                ete_metric=ete_metric.numpy(), lr = self.optimizer.learning_rate.numpy())
+                    
+                    with self.logger.as_default():
+                        tf.summary.scalar("etr_loss", etr_loss, step=epoch)
+                        tf.summary.scalar("etr_metric", etr_metric, step=epoch)
+                        tf.summary.scalar("ete_loss", ete_loss, step=epoch)
+                        tf.summary.scalar("ete_metric", ete_metric, step=epoch)
+                        
+        if hvd.rank() == 0:
+            self.model.summary()
+            self.model_save(name="finished")
+        

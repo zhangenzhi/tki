@@ -1,12 +1,13 @@
 
 from .naive_student import NaiveStudent
+from .hvd_student import HVDStudent
 
 from .naive_supervisor import NaiveSupervisor
-
+from .hvd_supervisor import HVDSupervisor
 
 class StudentFactory():
     def __init__(self) -> None:
-        self.student_list = {'naive':NaiveStudent}
+        self.student_list = {'naive':NaiveStudent, 'hvd':HVDStudent}
 
     def __call__(self, student_args, supervisor = None, id = 0):
         return self.get_student(student_args=student_args, 
@@ -23,7 +24,7 @@ class StudentFactory():
 
 class SupervisorFactory():
     def __init__(self) -> None:
-        self.supervisor_list = {'naive': NaiveSupervisor}
+        self.supervisor_list = {'naive': NaiveSupervisor, 'HVD':HVDSupervisor}
     
     def __call__(self, supervisor_args, student_target='', id = 0):
         return self.get_supervisor(supervisor_args=supervisor_args, id=id)

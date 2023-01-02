@@ -24,7 +24,7 @@ class Trainer(object):
         self.best_metrics = 0.0
         self.logdir = self._create_logdir()
 
-    def _build_enviroment(self, devices='1'):
+    def _build_enviroment(self):
   
         gpus = tf.config.experimental.list_physical_devices("GPU")
         print_green("devices:", gpus)
