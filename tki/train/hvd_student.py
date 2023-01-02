@@ -50,7 +50,7 @@ class HVDStudent(Student):
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
         
         with tf.GradientTape() as tape:
-            predictions = self.model(inputs)
+            predictions = self.model(inputs,training=True)
             loss = self.loss_fn(labels, predictions)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
         
@@ -58,8 +58,6 @@ class HVDStudent(Student):
         grads = tape.gradient(loss, self.model.trainable_variables)
         
         grads = [action*g for g in grads]
-        if hvd.rank() == 0:
-            print(grads[-1])
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         self.mt_loss_fn.update_state(loss)
         
