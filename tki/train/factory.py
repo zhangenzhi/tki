@@ -24,7 +24,7 @@ class StudentFactory():
 
 class SupervisorFactory():
     def __init__(self) -> None:
-        self.supervisor_list = {'naive': NaiveSupervisor, 'HVD':HVDSupervisor}
+        self.supervisor_list = {'naive': NaiveSupervisor, 'hvd':HVDSupervisor}
     
     def __call__(self, supervisor_args, student_target='', id = 0):
         return self.get_supervisor(supervisor_args=supervisor_args, id=id)
