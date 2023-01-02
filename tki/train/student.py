@@ -121,7 +121,7 @@ class Student(Trainer):
     def run(self, connect_queue=None, devices='1'):
 
         # set enviroment
-        self._build_enviroment()
+        # self._build_enviroment()
 
         # prepare dataset
         self.train_dataset, self.valid_dataset, self.test_dataset, \
