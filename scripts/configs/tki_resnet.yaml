@@ -18,7 +18,7 @@ experiment:
     name: hvd
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 256 # 32*4
+      batch_size: 256 # 64*4
       epochs: 100
       da: True # data augumentation
     model:
@@ -30,7 +30,7 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.025
+      learning_rate: 0.05
     train_loop:
         train:
           lr_decay: True # decay
