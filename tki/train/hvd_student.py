@@ -105,6 +105,7 @@ class HVDStudent(Student):
                                                             valid_loss=valid_loss, 
                                                             valid_metric=valid_metrics,
                                                             step=epoch*train_steps_per_epoch+train_step)
+                        print(self.training_knowledge.training_knowledge.valid_metric)
                         with self.logger.as_default():
                             tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)
                             tf.summary.scalar("action",  action, step=epoch*train_steps_per_epoch+train_step)
@@ -155,4 +156,8 @@ class HVDStudent(Student):
         if hvd.rank() == 0:
             self.model.summary()
             self.model_save(name="finished")
+            reward = self.training_knowledge.save_experience()
+            with self.logger.as_default():
+                for idx in range(len(reward)):
+                    tf.summary.scalar("reward", reward[idx], step=idx)
         
