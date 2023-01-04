@@ -192,7 +192,6 @@ class HVDStudent(Student):
         self.train()
         
         print('Finished training student {}'.format(self.id))
-        time.sleep(10)
         print_green('Finished student {}'.format(self.id))
         
         if connect_queue != None:
