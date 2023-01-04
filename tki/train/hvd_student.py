@@ -105,7 +105,7 @@ class HVDStudent(Student):
                                                             valid_loss=valid_loss, 
                                                             valid_metric=valid_metrics,
                                                             step=epoch*train_steps_per_epoch+train_step)
-                        print(self.training_knowledge.training_knowledge.valid_metric)
+    
                         with self.logger.as_default():
                             tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)
                             tf.summary.scalar("action",  action, step=epoch*train_steps_per_epoch+train_step)
