@@ -162,6 +162,7 @@ class HVDStudent(Student):
             self.model.summary()
             self.model_save(name="finished")
             reward = self.training_knowledge.save_experience()
+            print_green(reward)
             with self.logger.as_default():
                 for idx in range(len(reward)):
                     tf.summary.scalar("reward", reward[idx], step=idx)
