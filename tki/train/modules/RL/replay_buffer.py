@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from easydict import EasyDict as edict
 
-from tki.tools.utils import check_mkdir, save_yaml_contents
+from tki.tools.utils import check_mkdir, save_yaml_contents, print_green
 from tki.dataloader.utils import glob_tfrecords
 
 class ReplayBuffer(object):
@@ -110,7 +110,7 @@ class ReplayBuffer(object):
         examples, configs = self.training_knowledge_example()
         for e in examples:
             self.writter.write(e.SerializeToString())
-        
+        print_green("write {}, sucessful!".format(self.weight_file))
         config_path = os.path.join(self.weight_dir, 'feature_configs.yaml')
 
         configs['num_of_students'] = len(glob_tfrecords(
