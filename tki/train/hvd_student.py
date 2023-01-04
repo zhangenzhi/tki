@@ -39,6 +39,10 @@ class HVDStudent(Student):
 
         return optimizer
     
+    def _build_logger(self):
+        logger = tf.summary.create_file_writer(self.logdir) if hvd.rank()==0 else None
+        return logger
+    
     def _create_logdir(self):
         logdir = "tensorboard/" + "{}-{}".format(self.name, self.id) + "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
         logdir = os.path.join(self.args.log_path, logdir)
@@ -160,4 +164,35 @@ class HVDStudent(Student):
             with self.logger.as_default():
                 for idx in range(len(reward)):
                     tf.summary.scalar("reward", reward[idx], step=idx)
+                    
+    def run(self, connect_queue=None, devices='1'):
+
+        # set enviroment
+        # self._build_enviroment()
+
+        # prepare dataset
+        self.train_dataset, self.valid_dataset, self.test_dataset, \
+            self.dataloader = self._build_dataset()
+
+        # build optimizer
+        self.optimizer = self._build_optimizer()
+
+        # build model
+        self.model = self._build_model()
+
+        # build losses and metrics
+        self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
+        self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
+        
+        # build weights save writter
+        self.logger = self._build_logger()
+   
+        self.train()
+        
+        print('Finished training student {}'.format(self.id))
+
+        if connect_queue != None:
+            connect_queue.put(self.training_knowledge.weight_file)
+
+        return self.training_knowledge.weight_file
         
