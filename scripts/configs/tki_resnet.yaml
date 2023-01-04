@@ -11,8 +11,8 @@ experiment:
     warmup: 
       student_nums: 0
       supervisor_iters: 1
-    nums: 0
-    student_nums: 0
+    nums: 3
+    student_nums: 1
 
   student:
     name: hvd
