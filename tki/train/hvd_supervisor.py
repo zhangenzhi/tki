@@ -1,5 +1,6 @@
 
 import os
+from tqdm import trange
 import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
@@ -40,3 +41,38 @@ class HVDSupervisor(Supervisor):
         if hvd.rank() == 0:
             check_mkdir(logdir)
         return logdir
+    
+    def train(self):
+        # parse train loop control args
+        train_loop_args = self.args['train_loop']
+        train_args = train_loop_args['train']
+        valid_args = train_loop_args['valid']
+
+        # dataset train, valid, test
+        train_iter = iter(self.train_dataset)
+        valid_iter = iter(self.valid_dataset)
+        test_iter = iter(self.test_dataset)
+        
+        
+        total_epochs = self.dataloader.info['epochs']  
+        train_steps_per_epoch = self.dataloader.info['train_step']
+
+        # train, valid, test
+        # tqdm update, logger
+        with trange(total_epochs, desc="Epochs") as e:
+            for epoch in e:
+                
+                # hparams setting
+                self.hparam_tuning(train_args, epoch, total_epochs)
+                # train
+                etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter)
+                    
+                e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy())
+                
+                with self.logger.as_default():
+                    tf.summary.scalar("etr_loss", etr_loss, step=self.id*total_epochs + epoch)
+                    tf.summary.scalar("etr_metric", etr_metric, step=self.id*total_epochs + epoch)
+
+        if hvd.rank() == 0:
+            self.model.summary()
+            self.model_save(name="finished")
