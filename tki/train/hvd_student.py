@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import time
 import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
@@ -190,7 +191,9 @@ class HVDStudent(Student):
         self.train()
         
         print('Finished training student {}'.format(self.id))
-
+        time.sleep(10)
+        print_green('Finished student {}'.format(self.id))
+        
         if connect_queue != None:
             connect_queue.put(self.training_knowledge.weight_file)
 
