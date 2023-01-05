@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: cifar10-MA13 #for each exp
+    name: resnet-MA13 #cifar10-MA13 #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
