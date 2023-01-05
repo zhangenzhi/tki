@@ -6,6 +6,7 @@ from datetime import datetime
 import horovod.tensorflow as hvd
 
 from tki.tools.utils import check_mkdir, print_green
+from tki.train.utils import ForkedPdb
 from tki.train.modules.RL.action import weights_augmentation
 from tki.train.supervisor import Supervisor
 
@@ -55,7 +56,7 @@ class HVDSupervisor(Supervisor):
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
         import pdb
-        pdb.set_trace()
+        ForkedPdb().set_trace()
         with tf.GradientTape() as tape:
             states, act_idx = inputs
             predictions = self.model(states)
