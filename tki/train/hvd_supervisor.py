@@ -22,6 +22,15 @@ class HVDSupervisor(Supervisor):
         if gpus:
             tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
     
+    def _build_optimizer(self):
+        optimizer_args = self.args.optimizer
+        optimizer = tf.keras.optimizers.get(optimizer_args.name)
+        optimizer.learning_rate = optimizer_args.learning_rate * hvd.size()
+        optimizer = hvd.DistributedOptimizer(optimizer)
+        self.base_lr = optimizer_args.learning_rate
+
+        return optimizer
+    
     def update(self, inputs, labels):
         
         with tf.GradientTape() as tape:
@@ -94,14 +103,14 @@ class HVDSupervisor(Supervisor):
                 etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter)
                     
                 e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy())
-                
-                with self.logger.as_default():
-                    tf.summary.scalar("etr_loss", etr_loss, step=self.id*total_epochs + epoch)
-                    tf.summary.scalar("etr_metric", etr_metric, step=self.id*total_epochs + epoch)
+                if hvd.rank() == 0:
+                    with self.logger.as_default():
+                        tf.summary.scalar("etr_loss", etr_loss, step=self.id*total_epochs + epoch)
+                        tf.summary.scalar("etr_metric", etr_metric, step=self.id*total_epochs + epoch)
 
-        
-        self.model.summary()
-        self.model_save(name="finished")
+        if hvd.rank() == 0:
+            self.model.summary()
+            self.model_save(name="finished")
     
     def run(self, keep_train=False, new_students=[]):
     
