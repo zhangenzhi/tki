@@ -55,8 +55,8 @@ class HVDSupervisor(Supervisor):
     
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
-        import pdb
-        ForkedPdb().set_trace()
+        # import pdb
+        # ForkedPdb().set_trace()
         with tf.GradientTape() as tape:
             states, act_idx = inputs
             predictions = self.model(states)
