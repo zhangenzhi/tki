@@ -80,36 +80,36 @@ class HVDSupervisor(Supervisor):
         self.model_save(name="finished")
     
     def run(self, keep_train=False, new_students=[]):
-        if hvd.rank() ==0:
-            if keep_train:
-                # prepare dataset
-                print_green("-"*10+"run_keep"+"-"*10)
-                self.new_students = new_students
-                self.train_dataset, self.valid_dataset, self.test_dataset \
-                    = self.dataloader.load_dataset(new_students = new_students)
-                
-                # train
-                self.train()
-                
-            else:
-                # set enviroment
-                print_green("-"*10+"run_init"+"-"*10)
+    
+        if keep_train:
+            # prepare dataset
+            print_green("-"*10+"run_keep"+"-"*10)
+            self.new_students = new_students
+            self.train_dataset, self.valid_dataset, self.test_dataset \
+                = self.dataloader.load_dataset(new_students = new_students)
+            
+            # train
+            self.train()
+            
+        else:
+            # set enviroment
+            print_green("-"*10+"run_init"+"-"*10)
 
-                # prepare dataset
-                self.train_dataset, self.valid_dataset, self.test_dataset, \
-                self.dataloader = self._build_dataset()
+            # prepare dataset
+            self.train_dataset, self.valid_dataset, self.test_dataset, \
+            self.dataloader = self._build_dataset()
 
-                # build optimizer
-                self.optimizer = self._build_optimizer()
+            # build optimizer
+            self.optimizer = self._build_optimizer()
 
-                # build losses and metrics
-                self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
-                self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
-                
-                # build weights and writter
-                self.logger = self._build_logger()
+            # build losses and metrics
+            self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
+            self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
+            
+            # build weights and writter
+            self.logger = self._build_logger()
 
-                # train
-                self.train()
-                
-            self.id += 1
+            # train
+            self.train()
+            
+        self.id += 1
