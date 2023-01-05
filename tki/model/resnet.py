@@ -192,8 +192,8 @@ class ResNetV2(Model):
         self.include_top = include_top
         self.classes = classes
         self.regularizer = regularizer
-        self.kernel_constrain = tf.keras.constraints.MinMaxNorm(min_value=-10.0, max_value=10.0, rate=1.0, axis=0)
-        self.bias_constrain = tf.keras.constraints.MinMaxNorm(min_value=-10.0, max_value=10.0, rate=1.0, axis=0)
+        self.kernel_constraint= tf.keras.constraints.MinMaxNorm(min_value=-10.0, max_value=10.0, rate=1.0, axis=0)
+        self.bias_constraint = tf.keras.constraints.MinMaxNorm(min_value=-10.0, max_value=10.0, rate=1.0, axis=0)
 
         self.preprocess_layers = self._build_preprocess()
         self.stack_fn_stacks = self._build_stack_fn()
@@ -210,7 +210,7 @@ class ResNetV2(Model):
         preprocess_layers.append(
             layers.Conv2D(16, kernel_size=(3,3), padding='same', kernel_initializer='he_normal', use_bias=self.use_bias,
                           kernel_regularizer=self.regularizer, name='pre_conv',
-                          kernel_constrain = self.kernel_constrain, bias_constrain=self.bias_constrain))
+                          kernel_constraint= self.kernel_constraint, bias_constrain=self.bias_constraint))
         preprocess_layers.append(layers.BatchNormalization(name='pre_conv_bn'))
         preprocess_layers.append(layers.Activation('relu', name='pre_act_relu'))
         return preprocess_layers 
@@ -227,8 +227,8 @@ class ResNetV2(Model):
             inference_layer.append(layers.Flatten())
             inference_layer.append(
                 layers.Dense(self.classes, activation='softmax', name='prediction', kernel_initializer='he_normal',
-                             kernel_regularizer=self.regularizer,kernel_constrain = self.kernel_constrain, 
-                             bias_constrain=self.bias_constrain))
+                             kernel_regularizer=self.regularizer,kernel_constraint = self.kernel_constraint, 
+                             bias_constraint=self.bias_constraint))
         else:
             inference_layer.append(layers.GlobalAveragePooling2D(name='avg_pool'))
         return inference_layer
@@ -261,7 +261,7 @@ class ResNetV2(Model):
                                                     name=name + '_downsampling_skip', 
                                                     kernel_initializer='he_normal',
                                                     kernel_regularizer=self.regularizer,
-                                                    kernel_constrain = self.kernel_constrain, bias_constrain=self.bias_constrain))
+                                                    kernel_constraint= self.kernel_constraint, bias_constraint=self.bias_constraint))
             # seq_layer_shortcut.append(layers.BatchNormalization(name=name + '_downsampling_skip_bn'))
         else:
             seq_layer_shortcut.append(layers.Lambda(lambda x: x))
@@ -269,14 +269,14 @@ class ResNetV2(Model):
         seq_layers_block.append(
             layers.Conv2D(filters, kernel_size=(3,3), padding='same', name=name + '_1_conv', strides=strides, 
                           kernel_initializer='he_normal',
-                          kernel_regularizer=self.regularizer,kernel_constrain = self.kernel_constrain, bias_constrain=self.bias_constrain))
+                          kernel_regularizer=self.regularizer,kernel_constraint= self.kernel_constraint, bias_constraint=self.bias_constraint))
         seq_layers_block.append(layers.BatchNormalization(name=name + '_1_bn'))
         seq_layers_block.append(layers.Activation('relu', name=name + '_1_relu'))
 
         seq_layers_block.append(
             layers.Conv2D(filters, kernel_size=(3,3), strides=1, padding='same', name=name + '_2_conv',
                           kernel_initializer='he_normal',
-                          kernel_regularizer=self.regularizer,kernel_constrain = self.kernel_constrain, bias_constrain=self.bias_constrain))
+                          kernel_regularizer=self.regularizer,kernel_constraint= self.kernel_constraint, bias_constrain=self.bias_constraint))
         seq_layers_block.append(layers.BatchNormalization(name=name + '_2_bn'))
 
         seq_layers_block.append(layers.Add(name=name + '_add'))
