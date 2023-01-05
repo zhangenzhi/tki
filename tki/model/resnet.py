@@ -276,7 +276,7 @@ class ResNetV2(Model):
         seq_layers_block.append(
             layers.Conv2D(filters, kernel_size=(3,3), strides=1, padding='same', name=name + '_2_conv',
                           kernel_initializer='he_normal',
-                          kernel_regularizer=self.regularizer,kernel_constraint= self.kernel_constraint, bias_constrain=self.bias_constraint))
+                          kernel_regularizer=self.regularizer,kernel_constraint= self.kernel_constraint, bias_constraint=self.bias_constraint))
         seq_layers_block.append(layers.BatchNormalization(name=name + '_2_bn'))
 
         seq_layers_block.append(layers.Add(name=name + '_add'))
