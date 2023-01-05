@@ -30,7 +30,7 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 2.0
+      learning_rate: 0.5
     train_loop:
         train:
           lr_decay: True # decay
