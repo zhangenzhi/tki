@@ -43,6 +43,30 @@ class HVDSupervisor(Supervisor):
             check_mkdir(logdir)
         return logdir
     
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False):
+        
+        with tf.GradientTape() as tape:
+            states, act_idx = inputs
+            predictions = self.model(states)
+            predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
+            loss = self.loss_fn(labels, predict_value)
+            print(loss)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predict_value))
+            
+        tape = hvd.DistributedGradientTape(tape)
+        gradients = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+        
+        if first_batch:
+            grads = None
+            hvd.broadcast_variables(self.model.variables, root_rank=0)
+            hvd.broadcast_variables(self.optimizer.variables(), root_rank=0)
+
+        self.mt_loss_fn.update_state(loss)
+        
+        return loss, gradients, train_metrics
+    
     def train(self):
         
         # parse train loop control args
