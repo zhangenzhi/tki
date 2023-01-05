@@ -170,7 +170,7 @@ class HVDStudent(Student):
 
         # set enviroment
         # self._build_enviroment()
-        hvd.init()
+        # hvd.init()
 
         # prepare dataset
         self.train_dataset, self.valid_dataset, self.test_dataset, \
