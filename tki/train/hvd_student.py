@@ -5,6 +5,7 @@ import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
 hvd.init()
+
 # others
 from tqdm import trange
 from easydict import EasyDict as edict
