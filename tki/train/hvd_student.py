@@ -53,7 +53,6 @@ class HVDStudent(Student):
     
     @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
-        action=1.0
         with tf.GradientTape() as tape:
             predictions = self.model(inputs, training=True)
             loss = self.loss_fn(labels, predictions)
@@ -83,6 +82,7 @@ class HVDStudent(Student):
                 # train
                 data = train_iter.get_next()
                 first_batch = True if epoch*train_steps_per_epoch+train_step == 0 else False
+                self.action = 1.0
                 train_loss, train_gard, train_metrics = self._train_step(data['inputs'], data['labels'], 
                                                                          first_batch=first_batch, action=self.action)
                 
