@@ -32,6 +32,8 @@ class Supervisor(Trainer):
         
         with tf.GradientTape() as tape:
             states, act_idx = inputs
+            import pdb
+            pdb.set_trace()
             predictions = self.model(states)
             predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
             loss = self.loss_fn(labels, predict_value)
