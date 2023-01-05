@@ -159,7 +159,8 @@ def flat_imagelization(weights):
     img_width = int(np.sqrt(img.shape[-1]/3))+1
     flatten_size = img_width*img_width*3 # rgb img
     img = tf.pad(img, paddings=[[0, 0],[flatten_size-img.shape[-1],0]], mode="CONSTANT")
-    
+    img = tf.clip_by_value(img, clip_value_min=-1.0, clip_value_max=1.0)
+
     return tf.reshape(img, shape=(img_width, img_width, 3))
 
 def stack_imagelization(weights):
