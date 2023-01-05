@@ -12,11 +12,11 @@ from tki.train.supervisor import Supervisor
 
 class HVDSupervisor(Supervisor):
     def __init__(self, supervisor_args, id = 0):
+        hvd.init()
         super(HVDSupervisor, self).__init__(supervisor_args, id = id)
         self._build_enviroment()
         
     def _build_enviroment(self):
-        hvd.init()
         gpus = tf.config.experimental.list_physical_devices('GPU')
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
