@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: resnet-MA13 #for each exp
+    name: res4s #for each exp
     # devices: 1
     # multi-p: 1
     dist:
