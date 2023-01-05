@@ -4,7 +4,7 @@ from tqdm import trange
 import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
-hvd.init()
+
 from tki.tools.utils import check_mkdir, print_green
 from tki.train.utils import ForkedPdb
 from tki.train.modules.RL.action import weights_augmentation
@@ -12,6 +12,7 @@ from tki.train.supervisor import Supervisor
 
 class HVDSupervisor(Supervisor):
     def __init__(self, supervisor_args, id = 0):
+        hvd.init()
         super(HVDSupervisor, self).__init__(supervisor_args, id = id)
         self._build_enviroment()
         

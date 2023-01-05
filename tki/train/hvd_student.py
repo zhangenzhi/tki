@@ -146,12 +146,12 @@ class HVDStudent(Student):
                 etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter, valid_args, valid_iter)
                 
                 # test
+                # if hvd.rank() == 0:
+                ete_loss, ete_metric = self.test_block(epoch, test_iter)
+            
+                e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy(), ete_loss=ete_loss.numpy(), 
+                            ete_metric=ete_metric.numpy(), lr = self.optimizer.learning_rate.numpy())
                 if hvd.rank() == 0:
-                    ete_loss, ete_metric = self.test_block(epoch, test_iter)
-                
-                    e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy(), ete_loss=ete_loss.numpy(), 
-                                ete_metric=ete_metric.numpy(), lr = self.optimizer.learning_rate.numpy())
-                    
                     with self.logger.as_default():
                         tf.summary.scalar("etr_loss", etr_loss, step=epoch)
                         tf.summary.scalar("etr_metric", etr_metric, step=epoch)
