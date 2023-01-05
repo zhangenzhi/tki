@@ -54,14 +54,11 @@ class HVDSupervisor(Supervisor):
     
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
-        # import pdb
-        # ForkedPdb().set_trace()
         with tf.GradientTape() as tape:
             states, act_idx = inputs
             predictions = self.model(states)
             predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
             loss = self.loss_fn(labels, predict_value)
-            print(loss)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predict_value))
             
         tape = hvd.DistributedGradientTape(tape)
