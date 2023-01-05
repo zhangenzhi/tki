@@ -210,7 +210,7 @@ class ResNetV2(Model):
         preprocess_layers.append(
             layers.Conv2D(16, kernel_size=(3,3), padding='same', kernel_initializer='he_normal', use_bias=self.use_bias,
                           kernel_regularizer=self.regularizer, name='pre_conv',
-                          kernel_constraint= self.kernel_constraint, bias_constrain=self.bias_constraint))
+                          kernel_constraint= self.kernel_constraint, bias_constraint=self.bias_constraint))
         preprocess_layers.append(layers.BatchNormalization(name='pre_conv_bn'))
         preprocess_layers.append(layers.Activation('relu', name='pre_act_relu'))
         return preprocess_layers 
