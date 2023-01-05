@@ -4,7 +4,6 @@ import time
 import tensorflow as tf
 from datetime import datetime
 import horovod.tensorflow as hvd
-hvd.init()
 
 # others
 from tqdm import trange
@@ -172,6 +171,7 @@ class HVDStudent(Student):
 
         # set enviroment
         # self._build_enviroment()
+        hvd.init()
 
         # prepare dataset
         self.train_dataset, self.valid_dataset, self.test_dataset, \
