@@ -19,7 +19,7 @@ experiment:
     dataloader:
       name: cifar10 # cifar100, mnist
       batch_size: 256 # 62*4
-      epochs: 196
+      epochs: 72
       da: True # data augumentation
     model:
       name: resnet56 
@@ -30,7 +30,7 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.25
+      learning_rate: 0.3
     train_loop:
         train:
           lr_decay: True # decay
