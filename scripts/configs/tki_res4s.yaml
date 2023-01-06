@@ -19,7 +19,7 @@ experiment:
     dataloader:
       name: cifar10 # cifar100, mnist
       batch_size: 256 # 62*4
-      epochs: 100
+      epochs: 196
       da: True # data augumentation
     model:
       name: resnet56 
