@@ -82,7 +82,6 @@ class HVDStudent(Student):
                 # train
                 data = train_iter.get_next()
                 first_batch = True if epoch*train_steps_per_epoch+train_step == 0 else False
-                self.action = 1.0
                 train_loss, train_gard, train_metrics = self._train_step(data['inputs'], data['labels'], 
                                                                          first_batch=first_batch, action=self.action)
                 
