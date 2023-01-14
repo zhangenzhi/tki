@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: RE-CA5 #cifar10-MA13 #for each exp
+    name: RE-CA5 #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -9,10 +9,10 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 10
+      student_nums: 0
       supervisor_iters: 1
-    nums: 0
-    student_nums: 0
+    nums: 100
+    student_nums: 3
 
   student:
     name: re
