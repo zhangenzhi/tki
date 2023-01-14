@@ -3,7 +3,7 @@ import os
 from tqdm import trange
 import tensorflow as tf
 from datetime import datetime
-import horovod.tensorflow as hvd
+# import horovod.tensorflow as hvd
 
 from tki.tools.utils import check_mkdir, print_green
 from tki.train.utils import ForkedPdb

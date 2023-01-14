@@ -15,18 +15,16 @@ experiment:
     student_nums: 0
 
   student:
-    name: naive
+    name: re
     dataloader:
       name: cifar10 # cifar100, mnist
       batch_size: 128
       epochs: 120
       da: False # data augumentation
     model:
-      name: resnet56
-      classes: 10 
-      # name: dnn
-      # units: [128,64,32,10] 
-      # activations: [relu,relu,relu,softmax] 
+      name: dnn
+      units: [128,64,32,10] 
+      activations: [relu,relu,relu,softmax] 
     loss:
       name: CategoricalCrossentropy
     metrics: 
@@ -64,7 +62,7 @@ experiment:
       epochs: 50
     model:
       name: dnn # default dnn
-      units: [128,64,32,13] # default 128,64,32,13
+      units: [128,64,32,7] # default 128,64,32,13
       activations: [relu,relu,relu,relu] # default relu
       normalization: False
       downsampling: True

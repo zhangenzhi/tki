@@ -17,21 +17,41 @@ class NaiveStudent(Student):
         super(NaiveStudent, self).__init__(student_args=student_args, 
                                            supervisor=supervisor, 
                                            id=id)
-        
     
-    def _tki_train_step(self, inputs, labels, action):
-        # base direction 
-        with tf.GradientTape() as tape_t:
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False, action=1.0):
+        with tf.GradientTape() as tape:
             predictions = self.model(inputs, training=True)
-            train_loss = self.loss_fn(labels, predictions)
+            loss = self.loss_fn(labels, predictions)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
-            
-        train_gard = tape_t.gradient(train_loss, self.model.trainable_variables)
-        self.mt_loss_fn.update_state(train_loss)
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            if not first_batch:
+                grads = [action*g for g in gradients]
+                self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
-        # next state
-        gradients = [g*action for g in train_gard]
-        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
-            
-        return train_loss, train_gard, train_metrics
+        self.mt_loss_fn.update_state(loss)
         
+        return loss, gradients, train_metrics
+
+class ReStudent(Student):
+    
+    def __init__(self, student_args, supervisor = None, id = 0):
+        super(ReStudent, self).__init__(student_args=student_args, 
+                                           supervisor=supervisor, 
+                                           id=id)
+        self.penalty_factor = 1e-4
+    
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False, action=1.0):
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs, training=True)
+            loss = self.loss_fn(labels, predictions)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            if not first_batch:
+                grads = [g+2*action*self.penalty_factor*w for g,w in zip(gradients, self.model.trainable_variables)]
+                self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+        self.mt_loss_fn.update_state(loss)
+        
+        return loss, gradients, train_metrics

@@ -111,11 +111,6 @@ class Student(Trainer):
                             
             etr_loss = self.mt_loss_fn.result()
             etr_metric = self.train_metrics.result()
-            
-            reward = self.training_knowledge.save_experience()
-            with self.logger.as_default():
-                for idx in range(len(reward)):
-                    tf.summary.scalar("reward", reward[idx], step=idx)
                     
             return etr_loss, etr_metric
 
@@ -146,6 +141,11 @@ class Student(Trainer):
         self.logger = self._build_logger()
    
         self.train()
+        
+        reward = self.training_knowledge.save_experience()
+        with self.logger.as_default():
+            for idx in range(len(reward)):
+                tf.summary.scalar("reward", reward[idx], step=idx)
         
         print('Finished training student {}'.format(self.id))
 
