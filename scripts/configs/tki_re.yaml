@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: RE-CA5 #for each exp
+    name: RE-MA5 #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -9,10 +9,10 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 0
-      supervisor_iters: 1
-    nums: 100
-    student_nums: 3
+      student_nums: 1
+      supervisor_iters: 0
+    nums: 0
+    student_nums: 0
 
   student:
     name: re
@@ -37,12 +37,12 @@ experiment:
           lr_decay: False # decay
           action:
             style: fix_n
-            act_space: [-0.03,-0.02,-0.01,0.0,0.01,0.02,0.03]
+            act_space: [0.0,1.0,2.0,4.0,8.0]
           policy: 
             style: epsilon_greedy
             epsilon: 0.50
         valid:
-          q_style: multi_action #multi_action
+          q_style: multi_action # multi_action
           save_knowledge: ["state", "reward", "act_idx"]
           discount_factor: 0.5
           weights_style: flat_imagelization # imagelization
@@ -62,7 +62,7 @@ experiment:
       epochs: 50
     model:
       name: dnn # default dnn
-      units: [128,64,32,7] # default 128,64,32,13
+      units: [128,64,32,5] # default 128,64,32,13
       activations: [relu,relu,relu,relu] # default relu
       normalization: False
       downsampling: True

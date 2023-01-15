@@ -39,7 +39,7 @@ class ReStudent(Student):
         super(ReStudent, self).__init__(student_args=student_args, 
                                            supervisor=supervisor, 
                                            id=id)
-        self.penalty_factor = 1e-4
+        self.penalty_factor = 0.0001
     
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False, action=1.0):
@@ -49,7 +49,8 @@ class ReStudent(Student):
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
             gradients = tape.gradient(loss, self.model.trainable_variables)
             if not first_batch:
-                grads = [g+2*action*self.penalty_factor*w for g,w in zip(gradients, self.model.trainable_variables)]
+                # self.penalty_factor += action
+                grads = [g+2*self.penalty_factor*action*w for g,w in zip(gradients, self.model.trainable_variables)]
                 self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
         self.mt_loss_fn.update_state(loss)
