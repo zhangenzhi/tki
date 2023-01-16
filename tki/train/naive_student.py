@@ -56,3 +56,27 @@ class ReStudent(Student):
         self.mt_loss_fn.update_state(loss)
         
         return loss, gradients, train_metrics
+    
+class LrReStudent(Student):
+    
+    def __init__(self, student_args, supervisor = None, id = 0):
+        super(LrReStudent, self).__init__(student_args=student_args, 
+                                           supervisor=supervisor, 
+                                           id=id)
+        self.penalty_factor = 0.0001
+    
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False, action=1.0):
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs, training=True)
+            loss = self.loss_fn(labels, predictions)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            if not first_batch:
+                gradients = [action[0]*g for g in gradients]
+                grads = [g+2*self.penalty_factor*action[1]*w for g,w in zip(gradients, self.model.trainable_variables)]
+                self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+        self.mt_loss_fn.update_state(loss)
+        
+        return loss, gradients, train_metrics

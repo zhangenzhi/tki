@@ -106,8 +106,12 @@ class Student(Trainer):
                                                           valid_metric=valid_metrics,
                                                           step=epoch*train_steps_per_epoch+train_step)
                     with self.logger.as_default():
-                         tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)
-                         tf.summary.scalar("action",  action, step=epoch*train_steps_per_epoch+train_step)
+                        tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)
+                        if self.act_space.act_style == "2_dims":
+                            tf.summary.scalar("act_lr",  action[0], step=epoch*train_steps_per_epoch+train_step)
+                            tf.summary.scalar("act_re",  action[1], step=epoch*train_steps_per_epoch+train_step)
+                        else:
+                            tf.summary.scalar("action",  action, step=epoch*train_steps_per_epoch+train_step)
                             
             etr_loss = self.mt_loss_fn.result()
             etr_metric = self.train_metrics.result()

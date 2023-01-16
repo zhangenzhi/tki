@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: resnet-MA13 #cifar10-MA13 #for each exp
+    name: LRRE-MA25
     # devices: 1
     # multi-p: 1
     # dist:
@@ -9,24 +9,22 @@ experiment:
 
   main_loop:
     warmup: 
-      student_nums: 10
+      student_nums: 15
       supervisor_iters: 1
-    nums: 0
-    student_nums: 0
+    nums: 100
+    student_nums: 1
 
   student:
-    name: naive
+    name: lrre
     dataloader:
       name: cifar10 # cifar100, mnist
       batch_size: 128
       epochs: 120
       da: False # data augumentation
     model:
-      name: resnet56
-      classes: 10 
-      # name: dnn
-      # units: [128,64,32,10] 
-      # activations: [relu,relu,relu,softmax] 
+      name: dnn
+      units: [128,64,32,10] 
+      activations: [relu,relu,relu,softmax] 
     loss:
       name: CategoricalCrossentropy
     metrics: 
@@ -38,10 +36,10 @@ experiment:
         train:
           lr_decay: False # decay
           action:
-            style: fix_n
+            style: 2_dims
             act_space: 
-              RE: [-0.03,-0.02,-0.01,0.0,0.01,0.02,0.03]
-              LR: [-0.03,-0.02,-0.01,0.0,0.01,0.02,0.03]
+              LR: [0.01, 0.1, 1.0, 2.0, 4.0]
+              RE: [0.0, 1.0, 2.0, 4.0, 8.0]
           policy: 
             style: epsilon_greedy
             epsilon: 0.50
@@ -66,7 +64,7 @@ experiment:
       epochs: 50
     model:
       name: dnn # default dnn
-      units: [128,64,32,13] # default 128,64,32,13
+      units: [128,64,32,25] # default 128,64,32,13
       activations: [relu,relu,relu,relu] # default relu
       normalization: False
       downsampling: True

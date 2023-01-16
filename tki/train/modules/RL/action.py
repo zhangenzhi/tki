@@ -4,14 +4,26 @@ import tensorflow as tf
 class ActionSpace(object):
     def __init__(self, action_args) -> None:
     
-        self.action_samples = action_args.act_space
+        self.act_space = action_args.act_space
         self.act_style = action_args.style
+        self.action_samples = self._expand_action_samples()
     
     def __call__(self, idx):
         return self.get_act_from_idx(idx)
     
     def __len__(self):
         return len(self.action_samples)
+    
+    # expand samples
+    def _expand_action_samples(self):
+        action_samples = []
+        if self.act_style == "fix_n":
+            action_samples = self.act_space
+        elif self.act_style == "2_dims":
+            for lr in self.act_space.LR:
+                for re in self.act_space.RE:
+                    action_samples.append([lr, re])
+        return action_samples
     
     # getter
     def get_length(self):
@@ -24,8 +36,9 @@ class ActionSpace(object):
         pass
     
     def predict_values(self, weights, supervisor):
-        if self.act_style  == "fix_n":
-            return fix_n_action(weights=weights, supervisor=supervisor)
+        aug_weights = weights_augmentation(weights)
+        values = supervisor({'state':aug_weights})
+        return values
     
 #----- actions -----
 def elem_action(supervisor, model, action_sample, id, t_grad, gloabl_train_step, num_act=1000):
