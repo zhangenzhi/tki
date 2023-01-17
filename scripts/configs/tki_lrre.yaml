@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: LRRE-MA25
+    name: LRRE-MA25-BZ512
     # devices: 1
     # multi-p: 1
     # dist:
