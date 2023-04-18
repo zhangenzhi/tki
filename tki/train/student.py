@@ -17,6 +17,7 @@ class Student(Trainer):
         
         ## RL
         self.action = 1.0
+        self.c_flag = False
         self.act_space = ActionSpace(action_args=student_args.train_loop.train.action)
         self.policy = PolicySpace(policy_args=student_args.train_loop.train.policy)
         self.training_knowledge = ReplayBuffer(buffer_args=student_args.train_loop.valid, 
@@ -91,6 +92,7 @@ class Student(Trainer):
                     act_idx = self.policy(expect_q_values, self.id)
                     action = self.act_space(act_idx)
                     self.action = action
+                    self.c_flag = True
                     
                     valid_loss, valid_metrics = self.valid_block(train_step, valid_args, valid_iter)
                     
@@ -107,6 +109,7 @@ class Student(Trainer):
                                                           step=epoch*train_steps_per_epoch+train_step)
                     with self.logger.as_default():
                         tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)
+                        tf.summary.scalar("lr", self.optimizer.lr, step=epoch*train_steps_per_epoch+train_step)
                         if self.act_space.act_style == "2_dims":
                             tf.summary.scalar("act_lr",  action[0], step=epoch*train_steps_per_epoch+train_step)
                             tf.summary.scalar("act_re",  action[1], step=epoch*train_steps_per_epoch+train_step)

@@ -33,6 +33,30 @@ class NaiveStudent(Student):
         
         return loss, gradients, train_metrics
 
+class CLrStudent(Student):
+    
+    def __init__(self, student_args, supervisor = None, id = 0):
+        super(CLrStudent, self).__init__(student_args=student_args, 
+                                           supervisor=supervisor, 
+                                           id=id)
+    
+    # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
+    def _train_step(self, inputs, labels, first_batch=False, action=0.0):
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs, training=True)
+            loss = self.loss_fn(labels, predictions)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predictions))
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            if not first_batch:
+                if self.c_flag:
+                    self.optimizer.lr = self.optimizer.lr + action
+                    self.c_flag=False
+                self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+
+        self.mt_loss_fn.update_state(loss)
+        
+        return loss, gradients, train_metrics
+    
 class ReStudent(Student):
     
     def __init__(self, student_args, supervisor = None, id = 0):
