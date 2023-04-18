@@ -51,6 +51,13 @@ class CLrStudent(Student):
                 if self.c_flag:
                     self.optimizer.lr = self.optimizer.lr + action
                     self.c_flag=False
+                
+                # lr-value protect
+                if self.optimizer.lr <= 0.001:
+                    self.optimizer.lr = 0.001
+                elif self.optimizer.lr >= 4.0:
+                    self.optimizer.lr = 4.0
+                    
                 self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
         self.mt_loss_fn.update_state(loss)
