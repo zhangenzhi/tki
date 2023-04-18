@@ -12,7 +12,7 @@ class DatasetFactory():
                              
                              'dnn_weights':DNNWeightsLoader,
                              'dnn_sumreduce':DNNSumReduce,
-                             'dnn_sr_RL':DNNRL}
+                             'dnn_RL':DNNRL}
     
     def __call__(self, dataloader_args):
         dataset = self.get_dataset(dataloader_args)

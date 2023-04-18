@@ -27,7 +27,7 @@ class BaseController(object):
     def _build_enviroment(self):
         self.args = self.yaml_configs['experiment']
         self.context = self.args['context']
-        self.devices = list(range(self.context['devices']))
+        # self.devices = list(range(self.context['devices']))
         self.log_path = os.path.join(self.context['log_path'], self.context['name'])
         
 
@@ -44,13 +44,11 @@ class BaseController(object):
         return student
 
     def _build_supervisor(self):
-        student_args = self.args["student"]
         supervisor_args = self.args["supervisor"]
         supervisor_args['context'] = self.context
         supervisor_args['log_path'] = self.log_path
 
         supervisor = supervisor_factory(supervisor_args=supervisor_args,
-                                        student_target= student_args['dataloader'],
                                         id = self._supervisor_ids)
 
         self._supervisor_ids += 1
@@ -61,7 +59,7 @@ class BaseController(object):
         supervisor_iters = warmup['supervisor_iters']
         
         for i in range(init_samples):
-            student = self._build_student()
+            student = self._build_student(supervisor=self.supervisor)
             student.run()
         
         for j in range(supervisor_iters):

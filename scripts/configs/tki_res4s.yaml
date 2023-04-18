@@ -1,0 +1,83 @@
+experiment:
+  context:
+    name: res4s #for each exp
+    # devices: 1
+    # multi-p: 1
+    dist:
+      devices: 4
+    log_path: ./log
+
+  main_loop:
+    warmup: 
+      student_nums: 1
+      supervisor_iters: 0
+    nums: 0
+    student_nums: 0
+
+  student:
+    name: hvd
+    dataloader:
+      name: cifar10 # cifar100, mnist
+      batch_size: 256 # 62*4
+      epochs: 100
+      da: True # data augumentation
+    model:
+      name: resnet56 
+      classes: 10 
+    loss:
+      name: CategoricalCrossentropy
+    metrics: 
+      name: CategoricalAccuracy
+    optimizer:
+      name: sgd 
+      learning_rate: 0.3
+    train_loop:
+        train:
+          lr_decay: True # decay
+          action:
+            style: fix_n
+            act_space: [0.01,0.05,0.1,0.25,0.5,0.75,1.0,1.5,2.0,2.5,3.0,3.5,4.0]
+          policy: 
+            style: epsilon_greedy
+            epsilon: 0.25
+        valid:
+          q_style: multi_action #multi_action
+          save_knowledge: ["state", "reward", "act_idx"]
+          discount_factor: 0.5
+          weights_style: flat_imagelization # imagelization
+          valid_gap: 100
+          online: False
+        test:
+          epoch: -1
+        visual: False
+
+  supervisor:
+    name: hvd
+    dataloader:
+      name: dnn_RL
+      exp: decay
+      replay_window: 10
+      batch_size: 32
+      epochs: 50
+    model:
+      name: dnn # default dnn
+      units: [128,64,32,13] # default 128,64,32,13
+      activations: [relu,relu,relu,relu] # default relu
+      normalization: False
+      downsampling: True
+    optimizer:
+      name: sgd
+      learning_rate: 0.0025
+    loss:
+      name: MeanAbsoluteError #MeanAbsoluteError 
+    metrics: 
+      name: MeanSquaredError
+    train_loop:
+        train:
+          lr_decay: False # decay
+          weights_style: flat_imagelization # stack_imagelization
+        valid:
+          valid_gap: 100
+          epoch: -1
+        test:
+          epoch: -1

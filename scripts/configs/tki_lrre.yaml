@@ -1,0 +1,86 @@
+experiment:
+  context:
+    name: LRRE-BZ512
+    # devices: 1
+    # multi-p: 1
+    # dist:
+    #   devices: 4
+    log_path: ./log
+
+  main_loop:
+    warmup: 
+      student_nums: 0
+      supervisor_iters: 1
+    nums: 100
+    student_nums: 1
+
+  student:
+    name: lrre
+    dataloader:
+      name: cifar10 # cifar100, mnist
+      batch_size: 512
+      epochs: 120
+      da: False # data augumentation
+    model:
+      name: dnn
+      units: [128,64,32,10] 
+      activations: [relu,relu,relu,softmax] 
+    loss:
+      name: CategoricalCrossentropy
+    metrics: 
+      name: CategoricalAccuracy
+    optimizer:
+      name: sgd 
+      learning_rate: 0.1 
+    train_loop:
+        train:
+          lr_decay: False # decay
+          action:
+            style: 2_dims
+            act_space: 
+              LR: [0.01, 0.1, 1.0, 2.0, 4.0]
+              RE: [0.0, 1.0, 2.0, 4.0, 8.0]
+          policy: 
+            style: epsilon_greedy
+            epsilon: 0.50
+        valid:
+          q_style: multi_action #multi_action
+          save_knowledge: ["state", "reward", "act_idx"]
+          discount_factor: 0.5
+          weights_style: flat_imagelization # imagelization
+          valid_gap: 100
+          online: False
+        test:
+          epoch: -1
+        visual: False
+
+  supervisor:
+    name: naive
+    dataloader:
+      name: dnn_RL
+      exp: decay
+      replay_window: 15
+      batch_size: 32
+      epochs: 50
+    model:
+      name: dnn # default dnn
+      units: [128,64,32,25] # default 128,64,32,13
+      activations: [relu,relu,relu,relu] # default relu
+      normalization: False
+      downsampling: True
+    optimizer:
+      name: sgd
+      learning_rate: 0.01
+    loss:
+      name: MeanAbsoluteError #MeanAbsoluteError 
+    metrics: 
+      name: MeanSquaredError
+    train_loop:
+        train:
+          lr_decay: False # decay
+          weights_style: flat_imagelization # stack_imagelization
+        valid:
+          valid_gap: 100
+          epoch: -1
+        test:
+          epoch: -1

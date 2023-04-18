@@ -1,62 +1,82 @@
+
 import os
 from tqdm import trange
 import tensorflow as tf
+from datetime import datetime
+# import horovod.tensorflow as hvd
 
-# others
+from tki.tools.utils import check_mkdir, print_green
+from tki.train.utils import ForkedPdb
 from tki.train.modules.RL.action import weights_augmentation
-from tki.tools.utils import print_green, print_error, print_normal, check_mkdir
-from tki.train.trainer import Trainer
+from tki.train.supervisor import Supervisor
 
-class Supervisor(Trainer):
+class HVDSupervisor(Supervisor):
     def __init__(self, supervisor_args, id = 0):
-        super(Supervisor, self).__init__(trainer_args=supervisor_args, id=id)
-        
-        # build model
+        hvd.init()
+        super(HVDSupervisor, self).__init__(supervisor_args, id = id)
         self._build_enviroment()
-        self.model = self._build_model()
-        self.name = "sp_" + supervisor_args.name
         
-        self.args.dataloader.path = os.path.join(supervisor_args.log_path, "weight_space")
-        self.weights_style = supervisor_args.train_loop.train.weights_style
-
-    def weights_augmentation(self, weights):
-        return weights_augmentation(weights=weights, style=self.weights_style) 
+    def _build_enviroment(self):
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        if gpus:
+            tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
     
-    def __call__(self, weights):
-        state = self.weights_augmentation(weights=weights)
-        prediction = self.model(tf.expand_dims(state, axis=0), training=False)
-        return prediction, state
+    def _build_optimizer(self):
+        optimizer_args = self.args.optimizer
+        optimizer = tf.keras.optimizers.get(optimizer_args.name)
+        optimizer.learning_rate = optimizer_args.learning_rate * hvd.size()
+        optimizer = hvd.DistributedOptimizer(optimizer)
+        self.base_lr = optimizer_args.learning_rate
+
+        return optimizer
+    
+    def update(self, inputs, labels):
+        
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs, training=True)
+            predictions = tf.squeeze(predictions)
+            labels = tf.reshape(labels,predictions.shape)
+            loss = self.loss_fn(labels, predictions)
+
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+
+            self.optimizer.apply_gradients(
+                zip(gradients, self.model.trainable_variables))
+        print(loss)
+    
+    def _create_logdir(self):
+        logdir = "tensorboard/" + "{}-{}".format(self.name, self.id) + "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = os.path.join(self.args.log_path, logdir)
+        if hvd.rank() == 0:
+            check_mkdir(logdir)
+        return logdir
     
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
-        
         with tf.GradientTape() as tape:
             states, act_idx = inputs
             predictions = self.model(states)
             predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
             loss = self.loss_fn(labels, predict_value)
             train_metrics = tf.reduce_mean(self.train_metrics(labels, predict_value))
-            gradients = tape.gradient(loss, self.model.trainable_variables)
-            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+            
+        tape = hvd.DistributedGradientTape(tape)
+        gradients = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+        
+        if first_batch:
+            grads = None
+            hvd.broadcast_variables(self.model.variables, root_rank=0)
+            hvd.broadcast_variables(self.optimizer.variables(), root_rank=0)
 
         self.mt_loss_fn.update_state(loss)
         
         return loss, gradients, train_metrics
     
-    def train_block(self, epoch, train_steps_per_epoch, train_iter):
-        with trange(train_steps_per_epoch, desc="Train steps", leave=False) as t:
-            self.mt_loss_fn.reset_states()
-            self.train_metrics.reset_states()
-            for train_step in t:
-                # train
-                data = train_iter.get_next()
-                train_loss, gard, train_metrics = self._train_step((data['state'], data['act_idx']), data['reward'])
-                            
-            etr_loss = self.mt_loss_fn.result()
-            etr_metric = self.train_metrics.result()
-            return etr_loss, etr_metric 
-    
     def train(self):
+        
         # parse train loop control args
         train_loop_args = self.args['train_loop']
         train_args = train_loop_args['train']
@@ -80,22 +100,19 @@ class Supervisor(Trainer):
                 self.hparam_tuning(train_args, epoch, total_epochs)
                 # train
                 etr_loss, etr_metric= self.train_block(epoch, train_steps_per_epoch, train_iter)
-                # test
-                # ete_loss, ete_metric = self.test_block(epoch, test_iter)
                     
                 e.set_postfix(etr_loss=etr_loss.numpy(), etr_metric=etr_metric.numpy())
-                
-                with self.logger.as_default():
-                    tf.summary.scalar("etr_loss", etr_loss, step=self.id*total_epochs + epoch)
-                    tf.summary.scalar("etr_metric", etr_metric, step=self.id*total_epochs + epoch)
-                    # tf.summary.scalar("ete_loss", ete_loss, step=epoch)
-                    # tf.summary.scalar("ete_metric", ete_metric, step=epoch)
-        
-        self.model.summary()
-        self.model_save(name="finished")
+                if hvd.rank() == 0:
+                    with self.logger.as_default():
+                        tf.summary.scalar("etr_loss", etr_loss, step=self.id*total_epochs + epoch)
+                        tf.summary.scalar("etr_metric", etr_metric, step=self.id*total_epochs + epoch)
 
+        if hvd.rank() == 0:
+            self.model.summary()
+            self.model_save(name="finished")
+    
     def run(self, keep_train=False, new_students=[]):
-        
+    
         if keep_train:
             # prepare dataset
             print_green("-"*10+"run_keep"+"-"*10)
@@ -128,4 +145,3 @@ class Supervisor(Trainer):
             self.train()
             
         self.id += 1
-

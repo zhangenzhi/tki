@@ -57,7 +57,7 @@ class DNNWeightsLoader(BaseDataLoader):
         
         feature_config = {
                 'valid_loss': {"type": 'value', "length": 1, "dtype": tf.float32},
-                'vars': {"type": 'list', "length": yaml_feature_config['vars_length']['value'], "dtype": tf.string},
+                'vars': {"type": 'value', "length": 1, "dtype": tf.string},
             }
 
         return feature_config, info
@@ -139,7 +139,7 @@ class DNNWeightsLoader(BaseDataLoader):
         print_green("students:{}".format(filelist))
         self.info = self.get_info_inference(num_of_students=len(filelist),sample_per_student=self.info['sample_per_student'])
         full_dataset = self._load_tensor_from_tfrecord(filelist=filelist, feature_config=self.feature_config)
-        full_dataset = full_dataset.shuffle(self.info['total_samples'])
+        full_dataset = full_dataset.shuffle(1000)
         
         train_dataset = full_dataset.take(self.info['train_samples'])
         
@@ -155,6 +155,7 @@ class DNNWeightsLoader(BaseDataLoader):
         valid_dataset = valid_dataset.repeat(self.info["epochs"])
         valid_dataset = valid_dataset.batch(self.dataloader_args['batch_size'])
         
+        test_dataset = test_dataset.repeat(-1)
         test_dataset = test_dataset.batch(self.dataloader_args['batch_size'])
         
         return train_dataset, valid_dataset, test_dataset
@@ -233,15 +234,20 @@ class DNNRL(DNNWeightsLoader):
         info = self.get_info_inference(yaml_feature_config['num_of_students'],
                                             yaml_feature_config['sample_per_student'])
         
+        # feature_config = {
+        #             'states': {"type": 'value', "length": 1, "dtype": tf.string},
+        #             'metrics':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'Q':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'actions':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'act_grads':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'steps':{"type": 'value', "length": 1, "dtype": tf.string},
+        #             'rewards':{"type": 'value', "length": 1, "dtype": tf.string}
+        #     }
         feature_config = {
-                    'states': {"type": 'value', "length": 1, "dtype": tf.string},
-                    'metrics':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'Q':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'actions':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'act_grads':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'steps':{"type": 'value', "length": 1, "dtype": tf.string},
-                    'rewards':{"type": 'value', "length": 1, "dtype": tf.string}
-            }
+                'state': {"type": 'value', "length": 1, "dtype": tf.string},
+                'act_idx': {"type": 'value', "length": 1, "dtype": tf.string},
+                'reward':{"type": 'value', "length": 1, "dtype": tf.string}
+        }
 
         return feature_config, info
 
@@ -275,8 +281,10 @@ class DNNRL(DNNWeightsLoader):
             example = tf.io.parse_example(example_proto, feature_describ)
             parsed_example = {}
             for feat, tensor in feature_describ.items():
-                if example[feat].dtype == tf.string:
+                if feat in ['state','reward']:
                     parsed_example[feat] = tf.io.parse_tensor(example[feat], out_type=tf.float32)
+                elif feat in ['act_idx']:
+                    parsed_example[feat] = tf.io.parse_tensor(example[feat], out_type=tf.int32)
                 else:
                     parsed_example[feat] = example[feat]
 
