@@ -27,6 +27,19 @@ class Supervisor(Trainer):
         prediction = self.model(tf.expand_dims(state, axis=0), training=False)
         return prediction, state
     
+    def update(self, inputs, labels):
+        
+        with tf.GradientTape() as tape:
+            states, act_idx = inputs
+            predictions = self.model(states)
+            predict_value = tf.gather_nd(params=predictions, indices = tf.reshape(act_idx,(-1,1)),batch_dims=1)
+            loss = self.loss_fn(labels, predict_value)
+            train_metrics = tf.reduce_mean(self.train_metrics(labels, predict_value))
+            gradients = tape.gradient(loss, self.model.trainable_variables)
+            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+        
+        return loss, gradients, train_metrics
+        
     # @tf.function(experimental_relax_shapes=True, experimental_compile=None)
     def _train_step(self, inputs, labels, first_batch=False):
         

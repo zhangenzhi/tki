@@ -1,5 +1,4 @@
-
-from .naive_student import NaiveStudent, ReStudent, LrReStudent, CLrStudent
+from .naive_student import NaiveStudent, ReStudent, LrReStudent, CLrStudent, OclrStudent
 from .hvd_student import HVDStudent
 
 from .naive_supervisor import NaiveSupervisor
@@ -9,7 +8,7 @@ class StudentFactory():
     def __init__(self) -> None:
         self.student_list = {'naive':NaiveStudent, 'hvd':HVDStudent, 
                              're':ReStudent, 'lrre':LrReStudent,
-                             'clr':CLrStudent}
+                             'clr':CLrStudent, 'oclr':OclrStudent}
 
     def __call__(self, student_args, supervisor = None, id = 0):
         return self.get_student(student_args=student_args, 

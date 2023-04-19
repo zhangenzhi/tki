@@ -107,6 +107,7 @@ class Student(Trainer):
                                                           valid_loss=valid_loss, 
                                                           valid_metric=valid_metrics,
                                                           step=epoch*train_steps_per_epoch+train_step)
+                    
                     with self.logger.as_default():
                         tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)
                         tf.summary.scalar("lr", self.optimizer.lr, step=epoch*train_steps_per_epoch+train_step)
