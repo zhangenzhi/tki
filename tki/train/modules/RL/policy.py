@@ -21,15 +21,13 @@ class PolicySpace(object):
             return max(range(values.shape[-1]), key=values[0][:].__getitem__) 
 
     def epsilon_aneal(self, id):
-        if id < 20:
+        if id < 5:
             self.epsilon = self.base
-        elif 20 <= id <= 40:
+        elif 5 <= id <= 10:
             self.epsilon = self.base / 2.0
-        elif 40 <= id <= 80:
+        elif 10 <= id <= 20:
             self.epsilon = self.base / 4.0
-        elif 80 <= id <= 160:
+        elif 20 <= id <= 35:
             self.epsilon = self.base / 8.0
-        elif 160 <= id <= 240:
-            self.epsilon = self.base / 16.0
         else:
-            self.epsilon = 0.0
+            self.epsilon = self.base / 16.0
