@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: online-CA3 #cifar10-MA13 #for each exp
+    name: online-CA3-lr001 #cifar10-MA13 #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
@@ -33,7 +33,7 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.01 
+      learning_rate: 0.1 
     train_loop:
         train:
           lr_decay: False # decay
