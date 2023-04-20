@@ -133,8 +133,8 @@ class OclrStudent(Student):
                 # lr-value protect
                 if self.optimizer.lr <= 0.001:
                     self.optimizer.lr = 0.001
-                elif self.optimizer.lr >= 4.0:
-                    self.optimizer.lr = 4.0
+                elif self.optimizer.lr >= 1.0:
+                    self.optimizer.lr = 1.0
                     
                 self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 

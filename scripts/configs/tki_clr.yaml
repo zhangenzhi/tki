@@ -33,14 +33,14 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.1 
+      learning_rate: 0.01 
     train_loop:
         train:
           lr_decay: False # decay
           discount_factor: 0.9
           action:
             style: fix_n
-            act_space: [-0.01,0.0,0.01]
+            act_space: [-0.001,0.0,0.001]
           policy: 
             style: epsilon_greedy
             epsilon: 0.90
