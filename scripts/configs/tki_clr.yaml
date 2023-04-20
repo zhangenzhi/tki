@@ -1,6 +1,6 @@
 experiment:
   context:
-    name: mlp-bz1024-test #cifar10-MA13 #for each exp
+    name: mlp-bz1024-lr001 #cifar10-MA13 #for each exp
     # devices: 1
     # multi-p: 1
     # dist:
