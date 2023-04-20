@@ -84,15 +84,14 @@ class Student(Trainer):
                 train_loss, train_gard, train_metrics = self._train_step(data['inputs'], data['labels'], 
                                                                          first_batch=first_batch, action=self.action)
                 
+                expect_q_values, state = self.supervisor(self.model.trainable_variables)
+                act_idx = self.policy(expect_q_values, self.id)
+                action = self.act_space(act_idx)
+                self.action = action
+                self.c_flag = True
                 
                 # valid
                 if (epoch*train_steps_per_epoch+train_step) % valid_args['valid_gap'] == 0:
-                    
-                    expect_q_values, state = self.supervisor(self.model.trainable_variables)
-                    act_idx = self.policy(expect_q_values, self.id)
-                    action = self.act_space(act_idx)
-                    self.action = action
-                    self.c_flag = True
                     
                     valid_loss, valid_metrics = self.valid_block(train_step, valid_args, valid_iter)
                     
