@@ -11,14 +11,14 @@ experiment:
     warmup: 
       student_nums: 1
       supervisor_iters: 1
-    nums: 0
-    student_nums: 0
+    nums: 1
+    student_nums: 1
 
   student:
     name: oclr
     dataloader:
       name: cifar10 # cifar100, mnist
-      batch_size: 128
+      batch_size: 1024
       epochs: 120
       da: False # data augumentation
     model:
@@ -33,14 +33,14 @@ experiment:
       name: CategoricalAccuracy
     optimizer:
       name: sgd 
-      learning_rate: 0.1 
+      learning_rate: 0.01 
     train_loop:
         train:
           lr_decay: False # decay
           discount_factor: 0.9
           action:
             style: fix_n
-            act_space: [-0.01,0.0,0.01]
+            act_space: [-0.001,0.0,0.001]
           policy: 
             style: epsilon_greedy
             epsilon: 0.90

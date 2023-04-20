@@ -155,15 +155,14 @@ class OclrStudent(Student):
                 train_loss, train_gard, train_metrics = self._train_step(data['inputs'], data['labels'], 
                                                                          first_batch=first_batch, action=self.action)
                 
+                expect_q_values, state = self.supervisor(self.model.trainable_variables)
+                act_idx = self.policy(expect_q_values, self.id)
+                action = self.act_space(act_idx)
+                self.action = action
+                self.c_flag = True
                 
                 # valid
                 if (epoch*train_steps_per_epoch+train_step) % valid_args['valid_gap'] == 0:
-                    
-                    expect_q_values, state = self.supervisor(self.model.trainable_variables)
-                    act_idx = self.policy(expect_q_values, self.id)
-                    action = self.act_space(act_idx)
-                    self.action = action
-                    self.c_flag = True
                     
                     valid_loss, valid_metrics = self.valid_block(train_step, valid_args, valid_iter)
                     
@@ -180,7 +179,12 @@ class OclrStudent(Student):
                                                           step=epoch*train_steps_per_epoch+train_step)
                     # online update
                     # form a batch from replay buffer
-                    self.supervisor.update(inputs=(state, act_idx), labels=q_value)
+                    exp_state = tf.expand_dims(state,axis=0)
+                    batch_size = self.supervisor.args.dataloader.batch_size
+                    batched_state = tf.tile(exp_state,[batch_size,1,1,1])
+                    batched_act_idx = tf.tile(tf.constant(act_idx,shape=[1,1]), [batch_size,1])
+                    batched_q_value = tf.tile(tf.constant(q_value,shape=[1,1]), [batch_size,1])
+                    self.supervisor.update(inputs=(batched_state, batched_act_idx), labels=batched_q_value)
                     
                     with self.logger.as_default():
                         tf.summary.scalar("q_value", q_value, step=epoch*train_steps_per_epoch+train_step)

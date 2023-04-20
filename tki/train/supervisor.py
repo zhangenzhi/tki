@@ -18,6 +18,11 @@ class Supervisor(Trainer):
         
         self.args.dataloader.path = os.path.join(supervisor_args.log_path, "weight_space")
         self.weights_style = supervisor_args.train_loop.train.weights_style
+        
+        # build losses and metrics
+        self.optimizer = self._build_optimizer()
+        self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
+        self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
 
     def weights_augmentation(self, weights):
         return weights_augmentation(weights=weights, style=self.weights_style) 
@@ -128,11 +133,11 @@ class Supervisor(Trainer):
             self.dataloader = self._build_dataset()
 
             # build optimizer
-            self.optimizer = self._build_optimizer()
+            # self.optimizer = self._build_optimizer()
 
             # build losses and metrics
-            self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
-            self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
+            # self.loss_fn, self.mt_loss_fn, self.mv_loss_fn, self.mtt_loss_fn = self._build_loss_fn()
+            # self.train_metrics, self.valid_metrics, self.test_metrics = self._build_metrics()
             
             # build weights and writter
             self.logger = self._build_logger()
